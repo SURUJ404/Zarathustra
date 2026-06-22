@@ -1,0 +1,56 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'zarathustra/web/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci --omit=dev
+        working-directory: zarathustra/web
+
+      - name: Download zarathustra CLI binary
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          URL="https://github.com/SURUJ404/Zarathustra/releases/download/v${TAG}/zarathustra-x86_64-unknown-linux-gnu.tgz"
+          curl -sL "$URL" -o /tmp/zarathustra.tgz || \
+            curl -sL "https://github.com/SURUJ404/Zarathustra/releases/latest/download/zarathustra-x86_64-unknown-linux-gnu.tgz" \
+              -o /tmp/zarathustra.tgz
+          tar -xzf /tmp/zarathustra.tgz -C /tmp/
+          mkdir -p zarathustra/web/bin
+          cp /tmp/zarathustra zarathustra/web/bin/
+
+      - name: Deploy to VPS
+        uses: easingthemes/ssh-deploy@v4
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
+          ARGS: "-avz --delete"
+          SOURCE: "zarathustra/web/"
+          REMOTE_HOST: ${{ secrets.VPS_HOST }}
+          REMOTE_USER: ${{ secrets.VPS_USER }}
+          TARGET: ${{ secrets.VPS_TARGET }}
+
+      - name: Restart server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.VPS_TARGET }}
+            npm ci --omit=dev
+            pm2 restart zarathustra 2>/dev/null || pm2 start ecosystem.config.js
+            pm2 save

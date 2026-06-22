@@ -49,7 +49,7 @@ function runZarathustra(args) {
     try {
         const stdout = execSync(`"${bin}" ${args.join(' ')}`, {
             cwd: WORK_DIR,
-            env: { ...process.env, ZOKRATES_STDLIB: STDLIB_PATH },
+            env: { ...process.env, ZARATHUSTRA_STDLIB: STDLIB_PATH },
             encoding: 'utf-8',
             maxBuffer: MAX_FILE_SIZE * 1024 * 1024,
             timeout: 120000,
@@ -112,7 +112,7 @@ app.post('/api/compute-witness', (req, res) => {
     try {
         const proc = execFileSync(bin, args, {
             cwd: WORK_DIR,
-            env: { ...process.env, ZOKRATES_STDLIB: STDLIB_PATH },
+            env: { ...process.env, ZARATHUSTRA_STDLIB: STDLIB_PATH },
             encoding: 'utf-8',
             maxBuffer: MAX_FILE_SIZE * 1024 * 1024,
             timeout: 120000,
