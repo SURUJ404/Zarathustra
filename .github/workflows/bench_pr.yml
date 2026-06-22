@@ -1,0 +1,32 @@
+name: Benchmark Check
+
+on:
+  push:
+    branches: [main, "release-*"]
+  pull_request:
+    branches: [main, "release-*"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - run: git lfs pull
+      - uses: ./.github/actions/rustup
+      - uses: ./.github/actions/sccache
+      - name: Full build
+        run: cargo build --release -F prove --locked --quiet
+      - run: sccache --show-stats

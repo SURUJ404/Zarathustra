@@ -1,0 +1,34 @@
+name: Bug Report
+description: Let us know about an issue you experienced with this software
+labels: [ bug ]
+
+body:
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue?
+      description: Please search to see if an issue already exists and leave a comment that you also experienced this issue or add your specifics that are related to an existing issue.
+      options:
+        - label: I have searched the existing issues
+          required: true
+  - type: textarea
+    id: bug
+    attributes:
+      label: Description of bug
+      description: What seems to be the problem?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide a minimal reproducible example with the steps that led to the discovery of the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Please share your OS, Rust version, and any other relevant environment details.
+      render: shell
+    validations:
+      required: false

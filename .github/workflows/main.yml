@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  merge_group:
+  pull_request:
+    branches: [main, "release-*"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      zarathustra: ${{ steps.filter.outputs.zarathustra }}
+      test: ${{ steps.filter.outputs.test }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: risc0/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+        id: filter
+        with:
+          filters: |
+            base: &base
+              - .github/actions/**
+              - .github/workflows/main.yml
+              - Cargo.toml
+              - rust-toolchain.toml
+              - Cargo.lock
+            zarathustra:
+              - *base
+              - zarathustra/**
+            test:
+              - *base
+              - zarathustra_core/**
+              - zarathustra_cli/**
+              - zarathustra_stdlib/**
+              - zarathustra_test/**
+
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/rustup
+      - name: Check formatting
+        run: cargo fmt --all --check
+      - name: Check clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Check markdown links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'no'
+          use-verbose-mode: 'yes'
+
+  test:
+    if: needs.changes.outputs.test == 'true'
+    needs: changes
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            feature: default
+    env:
+      FEATURE: ${{ matrix.feature }}
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - run: git lfs pull
+      - uses: ./.github/actions/rustup
+      - uses: ./.github/actions/sccache
+      - name: Run tests
+        run: cargo test --workspace -F $FEATURE
+
+  clippy:
+    if: needs.changes.outputs.zarathustra == 'true'
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/rustup
+      - uses: ./.github/actions/sccache
+      - name: Run clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+  doc:
+    if: needs.changes.outputs.zarathustra == 'true'
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/rustup
+      - uses: ./.github/actions/sccache
+      - name: Build documentation
+        run: cargo doc --no-deps --workspace

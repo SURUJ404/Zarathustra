@@ -1,0 +1,34 @@
+name: Nightly Tasks
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - run: git lfs pull
+      - uses: ./.github/actions/rustup
+      - uses: ./.github/actions/sccache
+      - name: Full build
+        run: cargo build --release -F prove --locked --quiet
+      - run: sccache --show-stats
+
+  alert_if_failed:
+    runs-on: ubuntu-latest
+    if: ${{ always() && contains(join(needs.*.result, ','), 'failure') }}
+    needs: [fuzz]
+    steps:
+      - name: Alert
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "Nightly Tasks Failed: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
