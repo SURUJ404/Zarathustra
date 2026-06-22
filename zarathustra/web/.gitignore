@@ -3,3 +3,5 @@ work/
 logs/
 .env
 *.log
+api/zarathustra
+api/stdlib/

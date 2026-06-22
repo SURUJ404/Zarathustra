@@ -9,9 +9,14 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const HOST = process.env.HOST || '0.0.0.0';
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
-const WORK_DIR = process.env.WORK_DIR || path.join(__dirname, 'work');
-const BIN_PATH = process.env.ZARATHUSTRA_BIN || path.join(__dirname, 'bin');
-const STDLIB_PATH = process.env.ZARATHUSTRA_STDLIB || path.resolve(__dirname, '..', 'stdlib');
+const IS_VERCEL = process.env.VERCEL === '1';
+
+const API_DIR = __dirname;
+const PUBLIC_DIR = path.join(API_DIR, '..', 'public');
+
+const WORK_DIR = process.env.WORK_DIR || (IS_VERCEL ? '/tmp/zarathustra-work' : path.join(API_DIR, 'work'));
+const BIN_PATH = process.env.ZARATHUSTRA_BIN || (IS_VERCEL ? path.join(API_DIR, 'api') : path.join(API_DIR, 'bin'));
+const STDLIB_PATH = process.env.ZARATHUSTRA_STDLIB || (IS_VERCEL ? path.join(API_DIR, 'api', 'stdlib') : path.join(API_DIR, '..', '..', 'zarathustra', 'stdlib'));
 const MAX_WORKERS = parseInt(process.env.MAX_WORKERS || '4', 10);
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '50', 10);
 
@@ -27,7 +32,7 @@ function log(level, msg, data) {
 
 app.use(cors());
 app.use(express.json({ limit: `${MAX_FILE_SIZE}mb` }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(PUBLIC_DIR));
 
 app.get('/api/health', (req, res) => {
     const bin = fs.existsSync(path.join(BIN_PATH, 'zarathustra')) ? path.join(BIN_PATH, 'zarathustra') : null;
@@ -194,12 +199,15 @@ app.post('/api/reset', (req, res) => {
     res.json({ ok: true });
 });
 
-const server = app.listen(PORT, HOST, () => {
-    console.log(`Zarathustra Web IDE running at http://${HOST}:${PORT}`);
-    console.log(`  Binary: ${BIN_PATH}/zarathustra`);
-    console.log(`  Stdlib: ${STDLIB_PATH}`);
-    console.log(`  Work:   ${WORK_DIR}`);
-});
+if (!IS_VERCEL) {
+    const server = app.listen(PORT, HOST, () => {
+        console.log(`Zarathustra Web IDE running at http://${HOST}:${PORT}`);
+        console.log(`  Binary: ${BIN_PATH}/zarathustra`);
+        console.log(`  Stdlib: ${STDLIB_PATH}`);
+        console.log(`  Work:   ${WORK_DIR}`);
+    });
+    process.on('SIGTERM', () => { log('info', 'SIGTERM received, shutting down'); server.close(() => process.exit(0)); });
+    process.on('SIGINT', () => { log('info', 'SIGINT received, shutting down'); server.close(() => process.exit(0)); });
+}
 
-process.on('SIGTERM', () => { log('info', 'SIGTERM received, shutting down'); server.close(() => process.exit(0)); });
-process.on('SIGINT', () => { log('info', 'SIGINT received, shutting down'); server.close(() => process.exit(0)); });
+module.exports = app;
