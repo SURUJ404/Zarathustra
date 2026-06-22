@@ -26,15 +26,9 @@ jobs:
       - name: Deploy to Vercel
         id: vercel
         run: |
-          mkdir -p zarathustra/web/.vercel
-          printf '{"orgId":"%s","projectId":"%s"}\n' \
-            "${{ secrets.ORGID }}" \
-            "prj_VhbnkUsDgGsmsqOLMJ3EpN4T0Cqv" \
-            > zarathustra/web/.vercel/project.json
-          cd zarathustra/web
           npx --yes vercel@latest deploy --prod \
             --token="${{ secrets.ZARATOKEN }}" \
             --scope=${{ secrets.ORGID }} \
-            --yes > ../vercel-url.txt
-          cd ..
-          echo "url=$(cat vercel-url.txt)" >> $GITHUB_OUTPUT
+            --cwd=zarathustra/web \
+            --yes --force 2>&1 | tee zarathustra/web/deploy-log.txt
+          echo "deploy_output=$(cat zarathustra/web/deploy-log.txt)" >> $GITHUB_OUTPUT
