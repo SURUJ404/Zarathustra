@@ -108,7 +108,7 @@ fn run_zarathustra(args: &[&str]) -> anyhow::Result<String> {
 
     let output = Command::new(&bin)
         .args(args)
-        .env("ZOKRATES_STDLIB", stdlib.to_str().unwrap())
+        .env("ZARATHUSTRA_STDLIB", stdlib.to_str().unwrap())
         .output()?;
 
     if !output.status.success() {
