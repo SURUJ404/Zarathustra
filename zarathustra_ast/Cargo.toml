@@ -1,0 +1,24 @@
+[package]
+name = "zarathustra_ast"
+version = "0.1.7"
+edition = "2021"
+
+[features]
+default = ["bellman", "ark"]
+bellman = ["zarathustra_field/bellman_extensions", "pairing_ce", "zarathustra_embed/bellman"]
+ark = ["ark-bls12-377", "zarathustra_embed/ark"]
+bellperson = ["zarathustra_field/bellperson_extensions"]
+
+[dependencies]
+byteorder = "1.4.3"
+zarathustra_pest_ast = { version = "0.3.0", path = "../zarathustra_pest_ast" }
+cfg-if = "0.1"
+zarathustra_field = { version = "0.5", path = "../zarathustra_field", default-features = false }
+serde = { version = "1.0", features = ["derive"] }
+serde_cbor = "0.11.2"
+num-bigint = { version = "0.2", default-features = false }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+zarathustra_embed = { version = "0.1.0", path = "../zarathustra_embed", default-features = false }
+pairing_ce = { version = "^0.21", optional = true }
+ark-bls12-377 = { version = "^0.3.0", features = ["curve"], default-features = false, optional = true }
+derivative = "2.2.0"

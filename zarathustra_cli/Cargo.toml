@@ -1,0 +1,63 @@
+[package]
+name = "zarathustra_cli"
+version = "0.8.7"
+authors = ["Jacob Eberhardt <jacob.eberhardt@tu-berlin.de>", "Dennis Kuhnert <mail@kyroy.com>", "Thibaut Schaeffer <thibaut@schaeff.fr>"]
+repository = "https://github.com/SURUJ404/zarathustra.git"
+edition = "2018"
+
+[features]
+default = ["bellman", "ark", "bellperson"]
+bellman = ["zarathustra_bellman", "zarathustra_core/bellman", "zarathustra_common/bellman"]
+ark = ["zarathustra_ark", "zarathustra_core/ark", "zarathustra_common/ark"]
+bellperson = ["zarathustra_bellperson", "zarathustra_core/bellperson", "zarathustra_common/bellperson"]
+
+[dependencies]
+log = "0.4"
+env_logger = "0.9.0"
+cfg-if = "0.1"
+clap = "2.26.2"
+serde_cbor = "0.11.2"
+regex = "0.2"
+zarathustra_field = { version = "0.5", path = "../zarathustra_field", features = ["multicore"] }
+zarathustra_abi = { version = "0.1", path = "../zarathustra_abi" }
+zarathustra_core = { version = "0.7", path = "../zarathustra_core", default-features = false }
+zarathustra_ast = { version = "0.1", path = "../zarathustra_ast", default-features = false }
+zarathustra_profiler = { version = "0.1", path = "../zarathustra_profiler", default-features = false }
+zarathustra_interpreter = { version = "0.1", path = "../zarathustra_interpreter", default-features = false }
+zarathustra_circom = { version = "0.1", path = "../zarathustra_circom", default-features = false }
+zarathustra_embed = { version = "0.1", path = "../zarathustra_embed", features = ["multicore"] }
+typed-arena = "1.4.1"
+zarathustra_fs_resolver = { version = "0.5", path = "../zarathustra_fs_resolver"}
+zarathustra_common = { version = "0.1", path = "../zarathustra_common", default-features = false }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+serde = { version = "1.0", features = ["derive"] }
+dirs = "3.0.1"
+lazy_static = "1.4.0"
+byteorder = "1"
+rand_0_4 = { version = "0.4", package = "rand" }
+rand_0_8 = { version = "0.8", package = "rand" }
+hex = "0.3.1"
+blake2 = "0.8.1"
+sha2 = "0.10.0"
+
+# Backends
+zarathustra_proof_systems = { version = "0.1", path = "../zarathustra_proof_systems", default-features = false }
+zarathustra_ark = { version = "0.1", path = "../zarathustra_ark", features = ["multicore"], optional = true }
+zarathustra_bellman = { version = "0.1", path = "../zarathustra_bellman", features = ["multicore"], optional = true }
+zarathustra_bellperson = { version = "0.1", path = "../zarathustra_bellperson", default-features = false, optional = true }
+
+[dev-dependencies]
+glob = "0.2.11"
+assert_cli = "0.5"
+tempdir = "0.3"
+ethabi = "17.0.0"
+primitive-types = { version = "0.11", features = ["rlp"] }
+fs_extra = "1.1.0"
+pretty_assertions = "1.2.1"
+
+[build-dependencies]
+fs_extra = "1.1.0"
+
+[[bin]]
+name = "zarathustra"
+path = "src/bin.rs"

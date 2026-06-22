@@ -1,0 +1,36 @@
+{
+  "name": "zarathustra",
+  "displayName": "zarathustra",
+  "description": "Syntax highlighting for the Zarathustra language",
+  "publisher": "zarathustra",
+  "repository": "https://github.com/ZoKrates/ZoKrates",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.53.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "zarathustra",
+        "aliases": [
+          "Zarathustra",
+          "zarathustra"
+        ],
+        "extensions": [
+          ".zok"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "zarathustra",
+        "scopeName": "source.zok",
+        "path": "./syntaxes/zarathustra.tmLanguage.json"
+      }
+    ]
+  }
+}

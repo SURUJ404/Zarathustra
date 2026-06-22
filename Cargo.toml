@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = [
+    "zarathustra_common",
+    "zarathustra_core",
+    "zarathustra_cli",
+    "zarathustra_fs_resolver",
+    "zarathustra_stdlib",
+    "zarathustra_codegen",
+    "zarathustra_analysis",
+    "zarathustra_embed",
+    "zarathustra_abi",
+    "zarathustra_test",
+    "zarathustra_core_test",
+    "zarathustra_ark",
+    "zarathustra_ast",
+    "zarathustra_interpreter",
+    "zarathustra_embed",
+    "zarathustra_bellman",
+    "zarathustra_bellperson",
+    "zarathustra_proof_systems",
+    "zarathustra_js",
+    "zarathustra_circom",
+    "zarathustra_profiler",
+]
+
+[profile.dev]
+opt-level = 1

@@ -1,0 +1,27 @@
+[package]
+name = "zarathustra_test"
+version = "0.2.3"
+authors = ["schaeff <thibaut@schaeff.fr>"]
+edition = "2018"
+
+[dependencies]
+zarathustra_field = { version = "0.5.0", path = "../zarathustra_field" }
+zarathustra_core = { version = "0.7", path = "../zarathustra_core" }
+zarathustra_ast = { version = "0.1", path = "../zarathustra_ast" }
+zarathustra_interpreter = { version = "0.1", path = "../zarathustra_interpreter" }
+zarathustra_fs_resolver = { version = "0.5", path = "../zarathustra_fs_resolver" }
+zarathustra_abi = { version = "0.1", path = "../zarathustra_abi" }
+zarathustra_common = { version = "0.1", path = "../zarathustra_common" }
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = { version = "1.0", features = ["preserve_order"] }
+typed-arena = "1.4.1"
+
+[dev-dependencies]
+wasm-bindgen-test = "=0.3.31"
+zarathustra_ark = { version = "0.1", path = "../zarathustra_ark" }
+zarathustra_proof_systems = { version = "0.1", path = "../zarathustra_proof_systems" }
+rand_0_8 = { version = "0.8", package = "rand" }
+getrandom = { version = "0.2.8", features = ["js"] }
+
+[lib]

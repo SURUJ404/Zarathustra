@@ -1,0 +1,12 @@
+[package]
+name = "zarathustra_fs_resolver"
+version = "0.5.2"
+authors = ["Thibaut Schaeffer <thibaut@schaeff.fr>"]
+repository = "https://github.com/JacobEberhardt/Zarathustra.git"
+edition = "2018"
+
+[dependencies]
+zarathustra_common = { path = "../zarathustra_common" }
+
+[dev-dependencies]
+tempfile = "3"

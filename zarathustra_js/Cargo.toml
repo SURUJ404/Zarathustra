@@ -1,0 +1,40 @@
+[package]
+name = "zarathustra_js"
+version = "1.1.8"
+authors = ["Darko Macesic"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+js-sys = "=0.3.58"
+serde = { version = "^1.0.59", features = ["derive"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+wasm-bindgen = { version = "=0.2.81", features = ["serde-serialize"] }
+typed-arena = "1.4.1"
+lazy_static = "1.4.0"
+zarathustra_field = { path = "../zarathustra_field" }
+rand_0_8 = { version = "0.8", package = "rand" }
+getrandom = { version = "0.2.8", features = ["js"] }
+zarathustra_core = { path = "../zarathustra_core", default-features = false, features = ["ark", "bellman"] }
+zarathustra_ark = { path = "../zarathustra_ark", default-features = false }
+zarathustra_embed = { path = "../zarathustra_embed", default-features = false }
+zarathustra_bellman = { path = "../zarathustra_bellman", default-features = false }
+zarathustra_common = { path = "../zarathustra_common", default-features = false, features = ["ark", "bellman"] }
+zarathustra_proof_systems = { path = "../zarathustra_proof_systems", default-features = false }
+zarathustra_ast = { path = "../zarathustra_ast", default-features = false, features = ["ark", "bellman"] }
+zarathustra_interpreter = { path = "../zarathustra_interpreter", default-features = false, features = ["ark", "bellman"] }
+zarathustra_abi = { path = "../zarathustra_abi", default-features = false, features = ["ark", "bellman"] }
+zarathustra_circom = { path = "../zarathustra_circom" }
+console_error_panic_hook = "0.1.6"
+indexmap = "~1.6.2" # see https://github.com/rustwasm/wasm-bindgen/issues/2770#issuecomment-1041102532
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+zarathustra_embed = { path = "../zarathustra_embed", features = ["wasm"] }
+zarathustra_bellman = { path = "../zarathustra_bellman", features = ["wasm"] }
+
+[build-dependencies]
+json = "0.12.4"
+walkdir = "2.3.2"
+toml = "0.5.9"

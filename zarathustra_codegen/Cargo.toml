@@ -1,0 +1,17 @@
+[package]
+name = "zarathustra_codegen"
+version = "0.1.3"
+edition = "2021"
+
+[features]
+default = ["ark", "bellman"]
+ark = ["zarathustra_ast/ark", "zarathustra_embed/ark", "zarathustra_common/ark", "zarathustra_interpreter/ark"]
+bellman = ["zarathustra_ast/bellman", "zarathustra_embed/bellman", "zarathustra_common/bellman", "zarathustra_interpreter/bellman"]
+bellperson = ["zarathustra_ast/bellperson", "zarathustra_common/bellperson"]
+
+[dependencies]
+zarathustra_field = { version = "0.5.0", path = "../zarathustra_field", default-features = false }
+zarathustra_common = { version = "0.1.0", path = "../zarathustra_common", default-features = false }
+zarathustra_embed = { version = "0.1.0", path = "../zarathustra_embed", default-features = false }
+zarathustra_interpreter = { version = "0.1", path = "../zarathustra_interpreter", default-features = false }
+zarathustra_ast = { version = "0.1", path = "../zarathustra_ast", default-features = false }

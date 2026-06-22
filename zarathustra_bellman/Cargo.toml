@@ -1,0 +1,30 @@
+[package]
+name = "zarathustra_bellman"
+version = "0.1.3"
+edition = "2021"
+
+[features]
+default = []
+wasm = ["bellman/nolog", "bellman/wasm"]
+multicore = ["bellman/multicore", "phase2/multicore"]
+
+[dependencies]
+zarathustra_field = { version = "0.5", path = "../zarathustra_field", default-features = false, features = ["bellman_extensions"] }
+zarathustra_ast = { version = "0.1", path = "../zarathustra_ast", default-features = false }
+zarathustra_proof_systems = { version = "0.1", path = "../zarathustra_proof_systems", default-features = false }
+
+bellman = { package = "bellman_ce", version = "^0.3", default-features = false }
+pairing = { package = "pairing_ce", version = "^0.21" }
+phase2 = { git = "https://github.com/ZoKrates/phase2", default-features = false }
+rand_0_4 = { version = "0.4", package = "rand" }
+rand_0_8 = { version = "0.8", package = "rand" }
+getrandom = { version = "0.2.8" }
+hex = "0.4.2"
+
+[dev-dependencies]
+zarathustra_interpreter = { version = "0.1", path = "../zarathustra_interpreter", features = ["bellman"] }
+
+
+
+
+

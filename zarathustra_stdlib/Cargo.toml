@@ -1,0 +1,13 @@
+[package]
+name = "zarathustra_stdlib"
+version = "0.3.3"
+authors = ["Stefan Deml <stefandeml@gmail.com>", "schaeff <thibaut@schaeff.fr>"]
+edition = "2018"
+
+[dev-dependencies]
+zarathustra_test = { version = "0.2", path = "../zarathustra_test" }
+
+[build-dependencies]
+fs_extra = "1.1.0"
+zarathustra_test_derive = { version = "0.0", path = "../zarathustra_test_derive" }
+

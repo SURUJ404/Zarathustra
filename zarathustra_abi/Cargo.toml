@@ -1,0 +1,17 @@
+[package]
+name = "zarathustra_abi"
+version = "0.1.9"
+authors = ["Thibaut Schaeffer <thibaut@schaeff.fr>"]
+edition = "2018"
+
+[features]
+default = ["ark", "bellman"]
+ark = ["zarathustra_ast/ark"]
+bellman = ["zarathustra_ast/bellman"]
+
+[dependencies]
+zarathustra_field = { version = "0.5", path = "../zarathustra_field", default-features = false }
+zarathustra_ast = { version = "0.1", path = "../zarathustra_ast", default-features = false }
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = { version = "1.0", features = ["preserve_order"] }
