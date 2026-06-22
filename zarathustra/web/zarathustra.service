@@ -15,7 +15,7 @@ StandardError=journal
 Environment=NODE_ENV=production
 Environment=PORT=4000
 Environment=HOST=0.0.0.0
-Environment=ZARATHUSTRA_BIN=/opt/zarathustra
+Environment=ZARATHUSTRA_BIN=/opt/zarathustra/web/bin
 Environment=ZARATHUSTRA_STDLIB=/opt/zarathustra/stdlib
 Environment=WORK_DIR=/opt/zarathustra/web/work
 Environment=LOG_LEVEL=info
