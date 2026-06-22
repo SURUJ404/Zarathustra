@@ -24,11 +24,9 @@ jobs:
         with:
           node-version: 20
       - name: Deploy to Vercel
-        id: vercel
         run: |
           npx --yes vercel@latest deploy --prod \
             --token="${{ secrets.ZARATOKEN }}" \
             --scope=${{ secrets.ORGID }} \
             --cwd=zarathustra/web \
-            --yes --force 2>&1 | tee zarathustra/web/deploy-log.txt
-          echo "deploy_output=$(cat zarathustra/web/deploy-log.txt)" >> $GITHUB_OUTPUT
+            --yes --force
