@@ -88,7 +88,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
             <option value="bls12_377">BLS12-377</option>
             <option value="pallas">Pallas (Nova)</option>
           </select>
-          <textarea id="abiArgs" class="abi-input" rows="2" placeholder='ABI args: ["42"] or leave empty'>["42"]</textarea>
+          <textarea id="abiArgs" class="abi-input" rows="2" placeholder='ABI args: ["12"] or leave empty'>["12"]</textarea>
         </div>
       </div>
     </div>
@@ -122,10 +122,10 @@ require(['vs/editor/editor.main'], function () {
 });
 
 const DEFAULT_CODE = `// Zarathustra - Zero Knowledge DSL
-// Prove knowledge of x such that x^2 == 42
+// Prove you know a number without revealing it
 
 def main(private field x) -> bool {
-    assert(x * x == 42);
+    assert(x * x == 144);
     return true;
 }
 `;
@@ -193,14 +193,24 @@ async function compile() {
 }
 
 async function computeWitness() {
-    const abiArgs = document.getElementById('abiArgs').value;
+    const raw = document.getElementById('abiArgs').value.trim();
     setStatus('Computing witness...');
+
+    let parsed;
+    try {
+        parsed = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+        document.getElementById('outputConsole').textContent =
+            `✗ Invalid ABI args: not valid JSON.\n  Example: ["12"]\n  Got: ${raw}`;
+        setStatus('Error', false);
+        return;
+    }
 
     try {
         const res = await fetch(API_BASE + '/api/compute-witness', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ args: abiArgs ? JSON.parse(abiArgs) : null }),
+            body: JSON.stringify({ args: parsed }),
         });
         const data = await res.json();
 
