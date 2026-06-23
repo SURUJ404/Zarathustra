@@ -1,0 +1,14 @@
+{
+    "functions": {
+        "zarathustra/web/api/index.js": {
+            "memory": 512,
+            "maxDuration": 30,
+            "includeFiles": "zarathustra/web/**"
+        }
+    },
+    "outputDirectory": "zarathustra/web/public",
+    "routes": [
+        { "src": "/api/(.*)", "dest": "/api/$1" },
+        { "src": "/(.*)", "dest": "/$1" }
+    ]
+}
