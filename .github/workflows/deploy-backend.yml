@@ -22,16 +22,17 @@ jobs:
         run: npm ci --omit=dev
         working-directory: zarathustra/web
 
-      - name: Download zarathustra CLI binary
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: x86_64-unknown-linux-gnu
+
+      - name: Build zarathustra CLI binary
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
-          URL="https://github.com/SURUJ404/Zarathustra/releases/download/v${TAG}/zarathustra-x86_64-unknown-linux-gnu.tgz"
-          curl -sL "$URL" -o /tmp/zarathustra.tgz || \
-            curl -sL "https://github.com/SURUJ404/Zarathustra/releases/latest/download/zarathustra-x86_64-unknown-linux-gnu.tgz" \
-              -o /tmp/zarathustra.tgz
-          tar -xzf /tmp/zarathustra.tgz -C /tmp/
+          cargo build --release --locked --package zarathustra_cli
           mkdir -p zarathustra/web/bin
-          cp /tmp/zarathustra zarathustra/web/bin/
+          cp target/release/zarathustra zarathustra/web/bin/
+          chmod +x zarathustra/web/bin/zarathustra
 
       - name: Deploy to VPS
         uses: easingthemes/ssh-deploy@v4
