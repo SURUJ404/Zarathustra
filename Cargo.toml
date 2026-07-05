@@ -22,6 +22,7 @@ members = [
     "zarathustra_js",
     "zarathustra_circom",
     "zarathustra_profiler",
+    "zarathustra_security",
 ]
 
 [profile.dev]

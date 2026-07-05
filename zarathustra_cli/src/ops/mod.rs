@@ -1,6 +1,8 @@
+pub mod audit;
 pub mod check;
 pub mod compile;
 pub mod compute_witness;
+pub mod deploy;
 pub mod export_verifier;
 #[cfg(any(feature = "bellman", feature = "ark"))]
 pub mod generate_proof;

@@ -27,6 +27,7 @@ zarathustra_interpreter = { version = "0.1", path = "../zarathustra_interpreter"
 zarathustra_circom = { version = "0.1", path = "../zarathustra_circom", default-features = false }
 zarathustra_embed = { version = "0.1", path = "../zarathustra_embed", features = ["multicore"] }
 typed-arena = "1.4.1"
+zarathustra_security = { version = "0.1", path = "../zarathustra_security" }
 zarathustra_fs_resolver = { version = "0.5", path = "../zarathustra_fs_resolver"}
 zarathustra_common = { version = "0.1", path = "../zarathustra_common", default-features = false }
 serde_json = { version = "1.0", features = ["preserve_order"] }

@@ -3739,6 +3739,7 @@ dependencies = [
  "zarathustra_interpreter",
  "zarathustra_profiler",
  "zarathustra_proof_systems",
+ "zarathustra_security",
 ]
 
 [[package]]
@@ -3935,6 +3936,17 @@ dependencies = [
  "serde",
  "zarathustra_ast",
  "zarathustra_field",
+]
+
+[[package]]
+name = "zarathustra_security"
+version = "0.1.0"
+dependencies = [
+ "regex 1.7.3",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "walkdir",
 ]
 
 [[package]]
