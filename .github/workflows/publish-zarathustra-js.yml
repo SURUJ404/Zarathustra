@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Downloads/ZoKrates-develop/zarathustra_js
+        working-directory: zarathustra_js
 
     steps:
       - uses: actions/checkout@v4

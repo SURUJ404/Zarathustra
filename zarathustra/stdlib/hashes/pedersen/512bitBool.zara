@@ -6,7 +6,7 @@ from "ecc/babyjubjubParams" import BABYJUBJUB_PARAMS;
 
 // Code to export generators used in this example:
 // import bitstring
-// from zokrates_pycrypto.gadgets.pedersenHasher import PedersenHasher
+// from pycrypto.gadgets.pedersenHasher import PedersenHasher
 // import numpy as np
 
 // #%%

@@ -3,7 +3,7 @@
   "displayName": "zarathustra",
   "description": "Syntax highlighting for the Zarathustra language",
   "publisher": "zarathustra",
-  "repository": "https://github.com/ZoKrates/ZoKrates",
+  "repository": "https://github.com/SURUJ404/Zarathustra",
   "version": "0.1.0",
   "engines": {
     "vscode": "^1.53.0"

@@ -19,10 +19,10 @@ curl -LSfs get.zararat.es | sh
 
 ### From source
 
-You can build Zarathustra from [source](https://github.com/ZoKrates/ZoKrates/) with the following commands:
+You can build Zarathustra from [source](https://github.com/SURUJ404/Zarathustra/) with the following commands:
 
 ```bash
-git clone https://github.com/ZoKrates/ZoKrates
+git clone https://github.com/SURUJ404/Zarathustra
 cd Zarathustra
 export ZARATHUSTRA_STDLIB=$PWD/zarathustra_stdlib/stdlib
 cargo build -p zarathustra_cli --release

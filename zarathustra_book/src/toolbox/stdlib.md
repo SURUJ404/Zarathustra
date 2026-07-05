@@ -37,7 +37,7 @@ Thanks to the existence of BabyJubJub, an efficient elliptic curve embedded in A
 - Proving knowledge of a private EdDSA key
 - Proving validity of an EdDSA signature
 
-Check out this [python repository](https://github.com/ZoKrates/pycrypto) for tooling, for example to generate EdDSA signatures to then check in a SNARK.
+Check out this [python repository](https://github.com/SURUJ404/pycrypto) for tooling, for example to generate EdDSA signatures to then check in a SNARK.
 
 ### Utils
 
