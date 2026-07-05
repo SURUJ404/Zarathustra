@@ -1,5 +1,0 @@
-import "./is_zero.zara";
-
-def main(field a, field b) -> field {
-    return is_zero(b - a);
-}

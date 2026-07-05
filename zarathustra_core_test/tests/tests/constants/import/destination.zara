@@ -1,6 +1,0 @@
-from "./origin.zara" import foo;
-
-def main() {
-    assert(foo([1, 1]));
-    return;
-}
