@@ -4,7 +4,8 @@ use regex::Regex;
 
 pub fn analyze(code: &str, ext: &str, file: &str) -> Vec<Finding> {
     match ext {
-        "zara" | "rs" => analyze_circuit(code, file),
+        "zara" => analyze_circuit(code, file),
+        "rs" => super::analyze_rust::analyze(code, file),
         "sol" => analyze_solidity(code, file),
         _ => Vec::new(),
     }

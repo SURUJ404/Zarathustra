@@ -45,9 +45,12 @@ dependencies = [
 name = "astra_security"
 version = "0.1.0"
 dependencies = [
+ "proc-macro2",
+ "quote",
  "regex",
  "serde",
  "serde_json",
+ "syn",
 ]
 
 [[package]]
