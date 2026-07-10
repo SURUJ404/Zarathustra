@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'web/**'
+      - 'api/**'
       - 'vercel.json'
   workflow_dispatch:
 
@@ -34,9 +35,9 @@ jobs:
       - name: Build astra CLI
         run: |
           cargo build --release --locked
-          mkdir -p web/api
-          cp target/release/astra web/api/astra
-          chmod +x web/api/astra
+          mkdir -p api
+          cp target/release/astra api/astra
+          chmod +x api/astra
 
       - name: Install deps
         run: npm ci --omit=dev
@@ -44,13 +45,7 @@ jobs:
 
       - name: Deploy to Vercel
         run: |
-          mkdir -p web/.vercel
-          printf '{"orgId":"%s","projectId":"%s"}\n' \
-            "${{ secrets.ORGID }}" \
-            "${{ secrets.PROJECTID }}" \
-            > web/.vercel/project.json
           npx --yes vercel@latest deploy --prod \
             --token="${{ secrets.ZARATOKEN }}" \
             --scope=${{ secrets.ORGID }} \
-            --cwd=web \
             --yes --force

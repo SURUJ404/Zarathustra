@@ -15,7 +15,7 @@ const API_DIR = __dirname;
 const PUBLIC_DIR = path.join(API_DIR, 'public');
 
 const WORK_DIR = process.env.WORK_DIR || (IS_VERCEL ? '/tmp/astra-work' : path.join(API_DIR, 'work'));
-const BIN_PATH = process.env.ASTRA_BIN || (IS_VERCEL ? path.join(API_DIR, 'api') : path.join(API_DIR, '..', 'target', 'debug'));
+const BIN_PATH = process.env.ASTRA_BIN || (IS_VERCEL ? path.join(API_DIR, '..', 'api') : path.join(API_DIR, '..', 'target', 'debug'));
 const STDLIB_PATH = process.env.ASTRA_STDLIB || '';
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '50', 10);
 
