@@ -63,17 +63,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
     <div class="output-pane">
       <div class="output-tabs">
-        <div class="output-tab active" onclick="switchTab('console')">Console</div>
-        <div class="output-tab" onclick="switchTab('proof')">Proof</div>
+        <div class="output-tab active" onclick="switchTab('console', this)">Console</div>
+        <div class="output-tab" onclick="switchTab('proof', this)">Proof</div>
       </div>
       <div class="output-content" id="outputConsole">// Ready. Write code and click Compile, Prove, or Verify.</div>
       <div class="output-content hidden" id="outputProof"></div>
 
       <div class="input-row">
         <label for="privInput">Private input:</label>
-        <input id="privInput" type="text" value="12" placeholder="e.g. 12">
+        <input id="privInput" type="text" value="3,5" placeholder="e.g. 3,5">
         <label for="pubInput" style="margin-left:12px;">Public input:</label>
-        <input id="pubInput" type="text" placeholder="e.g. 144">
+        <input id="pubInput" type="text" value="8" placeholder="e.g. 8">
         <span style="font-size:11px;color:#666;">(comma-separated)</span>
       </div>
     </div>
@@ -175,10 +175,10 @@ function getPublic() {
     return raw ? raw.split(',').map(s => s.trim()).filter(Boolean) : [];
 }
 
-function switchTab(tab) {
+function switchTab(tab, el) {
     document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.output-content').forEach(t => t.classList.add('hidden'));
-    event.target.classList.add('active');
+    el.classList.add('active');
     document.getElementById('output' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
 }
 
