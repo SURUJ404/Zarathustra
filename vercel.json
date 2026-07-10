@@ -1,7 +1,14 @@
 {
+  "functions": {
+    "web/api/index.js": {
+      "memory": 512,
+      "maxDuration": 30,
+      "includeFiles": "web/api/**"
+    }
+  },
   "outputDirectory": "web/public",
   "routes": [
-    { "src": "/api/(.*)", "dest": "web/api/$1" },
-    { "src": "/(.*)", "dest": "web/public/$1" }
+    { "src": "/api/(.*)", "dest": "web/api/index.js" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }

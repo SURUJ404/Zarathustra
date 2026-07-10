@@ -34,6 +34,7 @@ jobs:
       - name: Build astra CLI
         run: |
           cargo build --release --locked
+          mkdir -p web/api
           cp target/release/astra web/api/astra
           chmod +x web/api/astra
 
@@ -43,13 +44,12 @@ jobs:
 
       - name: Deploy to Vercel
         run: |
-          mkdir -p web/.vercel
+          mkdir -p .vercel
           printf '{"orgId":"%s","projectId":"%s"}\n' \
             "${{ secrets.ORGID }}" \
             "${{ secrets.PROJECTID }}" \
-            > web/.vercel/project.json
+            > .vercel/project.json
           npx --yes vercel@latest deploy --prod \
             --token="${{ secrets.ZARATOKEN }}" \
             --scope=${{ secrets.ORGID }} \
-            --cwd=web \
             --yes --force
