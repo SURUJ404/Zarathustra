@@ -19,6 +19,7 @@ const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '50', 10);
 const PASSKEY = process.env.ASTRA_PASSKEY;
 
 function passkeyAuth(req, res, next) {
+    if (IS_VERCEL) return next();
     if (!PASSKEY) return next();
     const provided = req.headers['x-passkey'] || req.query.passkey;
     if (!provided || provided !== PASSKEY) {
