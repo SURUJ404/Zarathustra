@@ -1,4 +1,26 @@
 use bls12_381::Scalar;
+use ff::PrimeField;
+
+pub fn scalar_from_dec_str(s: &str) -> Result<Scalar, String> {
+    if s.starts_with('-') {
+        let pos = scalar_from_dec_str(&s[1..])?;
+        return Ok(-pos);
+    }
+    let n = num_bigint::BigUint::parse_bytes(s.as_bytes(), 10)
+        .ok_or_else(|| format!("invalid number: {}", s))?;
+    let bytes = n.to_bytes_le();
+    let mut repr = <Scalar as PrimeField>::Repr::default();
+    let len = bytes.len().min(repr.as_ref().len());
+    repr.as_mut()[..len].copy_from_slice(&bytes[..len]);
+    Option::from(Scalar::from_repr(repr))
+        .ok_or_else(|| format!("invalid field element: {}", s))
+}
+
+pub fn scalar_display(s: &Scalar) -> String {
+    let bytes = s.to_repr();
+    let n = num_bigint::BigUint::from_bytes_le(bytes.as_ref());
+    n.to_string()
+}
 
 #[derive(Debug, Clone)]
 pub struct Program {
@@ -22,7 +44,7 @@ pub enum Stmt {
 
 #[derive(Debug, Clone)]
 pub enum Expr {
-    Number(u64),
+    Number(bls12_381::Scalar),
     Variable(String),
     Binary(BinaryOp, Box<Expr>, Box<Expr>),
 }

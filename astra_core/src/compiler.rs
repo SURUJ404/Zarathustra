@@ -5,10 +5,38 @@ use std::collections::HashMap;
 use crate::ir::*;
 use crate::parser;
 
-pub fn compile(source: &str, public: &[u64], private: &[u64]) -> Result<ConstraintSystem, String> {
+pub fn compile(source: &str, public: &[Scalar], private: &[Scalar]) -> Result<ConstraintSystem, String> {
     let program = parser::parse(source).map_err(|e| e.msg)?;
     let mut comp = Compiler::new();
     comp.compile_program(&program, public, private)
+}
+
+pub fn validate_constraints(cs: &ConstraintSystem) -> Result<(), String> {
+    let w = &cs.witness;
+    for (j, (a_row, (b_row, c_row))) in cs.a.iter().zip(cs.b.iter().zip(cs.c.iter())).enumerate() {
+        let mut a_sum = Scalar::ZERO;
+        for &(idx, coeff) in a_row {
+            if idx < w.len() {
+                a_sum += w[idx] * coeff;
+            }
+        }
+        let mut b_sum = Scalar::ZERO;
+        for &(idx, coeff) in b_row {
+            if idx < w.len() {
+                b_sum += w[idx] * coeff;
+            }
+        }
+        let mut c_sum = Scalar::ZERO;
+        for &(idx, coeff) in c_row {
+            if idx < w.len() {
+                c_sum += w[idx] * coeff;
+            }
+        }
+        if a_sum * b_sum - c_sum != Scalar::ZERO {
+            return Err(format!("constraint {} not satisfied", j));
+        }
+    }
+    Ok(())
 }
 
 struct Compiler {
@@ -64,8 +92,8 @@ impl Compiler {
     fn compile_program(
         &mut self,
         program: &Program,
-        public_inputs: &[u64],
-        private_inputs: &[u64],
+        public_inputs: &[Scalar],
+        private_inputs: &[Scalar],
     ) -> Result<ConstraintSystem, String> {
         let f = &program.main;
         let mut pub_idx = 0;
@@ -79,14 +107,14 @@ impl Compiler {
                 }
                 let v = private_inputs[priv_idx];
                 priv_idx += 1;
-                Scalar::from(v)
+                v
             } else {
                 if pub_idx >= public_inputs.len() {
                     return Err(format!("missing public input: {}", name));
                 }
                 let v = public_inputs[pub_idx];
                 pub_idx += 1;
-                Scalar::from(v)
+                v
             };
             self.var_values[idx] = val;
         }
@@ -111,9 +139,9 @@ impl Compiler {
 
     fn compile_expr(&mut self, expr: &Expr) -> Result<LinearCombination, String> {
         match expr {
-            Expr::Number(n) => {
+            Expr::Number(val) => {
                 let mut lc = LinearCombination::new();
-                lc.add_term(0, Scalar::from(*n));
+                lc.add_term(0, *val);
                 Ok(lc)
             }
             Expr::Variable(name) => {

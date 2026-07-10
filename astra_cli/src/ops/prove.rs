@@ -1,5 +1,6 @@
-use astra_core::{compile, setup, prove, verify};
+use astra_core::{compile, setup, prove, verify, validate_constraints, scalar_from_dec_str, scalar_display};
 use bls12_381::Scalar;
+use ff::Field;
 
 pub fn exec(matches: &clap::ArgMatches) {
     match matches.subcommand() {
@@ -11,10 +12,10 @@ pub fn exec(matches: &clap::ArgMatches) {
     }
 }
 
-fn parse_inputs(s: &str) -> Vec<u64> {
+fn parse_inputs(s: &str) -> Vec<Scalar> {
     s.split(',')
         .filter(|x| !x.is_empty())
-        .map(|x| x.trim().parse::<u64>().unwrap_or(0))
+        .map(|x| scalar_from_dec_str(x.trim()).unwrap_or(Scalar::ZERO))
         .collect()
 }
 
@@ -32,13 +33,12 @@ fn show_cs(cs: &astra_core::ConstraintSystem) {
     let w = &cs.witness;
     let labels = ["~one", "a", "b", "c"];
     for (i, val) in w.iter().enumerate() {
-        let bytes = val.to_bytes();
-        let slice: [u8; 8] = bytes[..8].try_into().unwrap_or([0u8; 8]);
-        let low = u64::from_le_bytes(slice);
         let lbl = labels.get(i).unwrap_or(&"");
-        println!("    w[{}] {} = {}", i, lbl, low);
+        println!("    w[{}] {} = {}", i, lbl, scalar_display(val));
     }
 }
+
+
 
 fn run_compile(m: &clap::ArgMatches) {
     let source = read_source(m).unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(1); });
@@ -63,6 +63,10 @@ fn run_prove(m: &clap::ArgMatches) {
     let public = parse_inputs(m.value_of("public").unwrap_or(""));
     let private = parse_inputs(m.value_of("private").unwrap_or(""));
     let cs = compile(&source, &public, &private).unwrap_or_else(|e| { eprintln!("Error: {}", e); std::process::exit(1); });
+    if let Err(e) = validate_constraints(&cs) {
+        eprintln!("Error: {} — cannot generate proof", e);
+        std::process::exit(1);
+    }
     let (pk, _vk) = setup(&cs);
     let proof = prove(&pk, &cs);
 
@@ -88,11 +92,14 @@ fn run_verify(m: &clap::ArgMatches) {
     let public = parse_inputs(m.value_of("public").unwrap_or(""));
     let private = parse_inputs(m.value_of("private").unwrap_or(""));
     let cs = compile(&source, &public, &private).unwrap_or_else(|e| { eprintln!("Error: {}", e); std::process::exit(1); });
+    if let Err(e) = validate_constraints(&cs) {
+        eprintln!("Error: {} — cannot verify", e);
+        std::process::exit(1);
+    }
     let (pk, vk) = setup(&cs);
     let proof = prove(&pk, &cs);
 
-    let public_scalars: Vec<Scalar> = public.iter().map(|v| Scalar::from(*v)).collect();
-    let result = verify(&vk, &public_scalars, &proof);
+    let result = verify(&vk, &public, &proof);
 
     println!("=== Verification ===");
     if result {

@@ -1,4 +1,5 @@
 use crate::ir::*;
+use bls12_381::Scalar;
 
 #[derive(Debug)]
 pub struct ParseError {
@@ -74,9 +75,12 @@ impl Parser {
         Ok(s)
     }
 
-    fn parse_number(&mut self) -> Result<u64, ParseError> {
+    fn parse_number(&mut self) -> Result<Scalar, ParseError> {
         self.skip_whitespace();
         let start = self.pos;
+        if self.peek() == Some('-') {
+            self.pos += 1;
+        }
         while let Some(c) = self.peek() {
             if c.is_ascii_digit() {
                 self.pos += 1;
@@ -88,7 +92,7 @@ impl Parser {
             return Err(ParseError { msg: format!("expected number at pos {}", self.pos) });
         }
         let s: String = self.chars[start..self.pos].iter().collect();
-        s.parse::<u64>().map_err(|_| ParseError { msg: "invalid number".into() })
+        scalar_from_dec_str(&s).map_err(|e| ParseError { msg: e })
     }
 
     fn parse_expr(&mut self) -> Result<Expr, ParseError> {

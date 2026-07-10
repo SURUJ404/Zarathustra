@@ -13,3 +13,4 @@ astra_security = { path = "../astra_security" }
 clap = "2"
 serde_json = "1"
 bls12_381 = "0.8"
+ff = "0.13"
