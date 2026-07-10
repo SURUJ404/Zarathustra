@@ -72,7 +72,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
       <div class="input-row">
         <label for="privInput">Private input:</label>
         <input id="privInput" type="text" value="12" placeholder="e.g. 12">
-        <span style="font-size:11px;color:#666;">(comma-separated for multiple)</span>
+        <label for="pubInput" style="margin-left:12px;">Public input:</label>
+        <input id="pubInput" type="text" placeholder="e.g. 144">
+        <span style="font-size:11px;color:#666;">(comma-separated)</span>
       </div>
     </div>
   </div>
@@ -97,12 +99,13 @@ async function apiPost(path, body) {
 let editor;
 let reportLog = [];
 
-function addReport(action, code, inputs, ok, result) {
+function addReport(action, code, privateInputs, publicInputs, ok, result) {
     reportLog.push({
         timestamp: new Date().toISOString(),
         action,
         code: code.slice(0, 200),
-        inputs,
+        private: privateInputs,
+        public: publicInputs,
         status: ok ? 'PASS' : 'FAIL',
         result: (result || '').slice(0, 300),
     });
@@ -136,11 +139,11 @@ require(['vs/editor/editor.main'], function () {
 });
 
 const DEFAULT_CODE = `// Astra - Zero Knowledge DSL
-// Prove you know a number without revealing it
+// Prove you know x, y such that x + y == sum
 
-def main(field private x) {
-    assert(x * x == 144);
-    return true;
+def main(field public sum, field private x, field private y) -> field {
+    assert(x + y == sum);
+    return 1;
 }
 `;
 
@@ -154,6 +157,10 @@ function getPrivate() {
     const raw = document.getElementById('privInput').value.trim();
     return raw ? raw.split(',').map(s => s.trim()).filter(Boolean) : [];
 }
+function getPublic() {
+    const raw = document.getElementById('pubInput').value.trim();
+    return raw ? raw.split(',').map(s => s.trim()).filter(Boolean) : [];
+}
 
 function switchTab(tab) {
     document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
@@ -164,58 +171,61 @@ function switchTab(tab) {
 
 async function compile() {
     const code = editor.getValue();
-    const inputs = getPrivate();
+    const priv = getPrivate();
+    const pub = getPublic();
     setStatus('Compiling...');
     document.getElementById('outputConsole').textContent = 'Compiling...\n';
     try {
-        const data = await apiPost('/api/compile', { code, private: inputs });
+        const data = await apiPost('/api/compile', { code, private: priv, public: pub });
         const out = data.ok ? data.stdout : (data.error || data.stdout);
         document.getElementById('outputConsole').textContent = out;
         setStatus(data.ok ? 'Compiled' : 'Error', data.ok);
-        addReport('COMPILE', code, inputs, data.ok, out);
+        addReport('COMPILE', code, priv, pub, data.ok, out);
     } catch (err) {
         document.getElementById('outputConsole').textContent = '✗ ' + err.message;
         setStatus('Error', false);
-        addReport('COMPILE', code, inputs, false, err.message);
+        addReport('COMPILE', code, priv, pub, false, err.message);
     }
 }
 
 async function prove() {
     const code = editor.getValue();
-    const inputs = getPrivate();
+    const priv = getPrivate();
+    const pub = getPublic();
     setStatus('Proving...');
     document.getElementById('outputConsole').textContent = 'Generating proof...\n';
     try {
-        const data = await apiPost('/api/prove', { code, private: inputs });
+        const data = await apiPost('/api/prove', { code, private: priv, public: pub });
         const out = data.ok ? data.stdout : (data.error || data.stdout);
         document.getElementById('outputConsole').textContent = out;
         if (data.proof) {
             document.getElementById('outputProof').textContent = JSON.stringify(data.proof, null, 2);
         }
         setStatus(data.ok ? 'Proof ready' : 'Error', data.ok);
-        addReport('PROVE', code, inputs, data.ok, out);
+        addReport('PROVE', code, priv, pub, data.ok, out);
     } catch (err) {
         document.getElementById('outputConsole').textContent = '✗ ' + err.message;
         setStatus('Error', false);
-        addReport('PROVE', code, inputs, false, err.message);
+        addReport('PROVE', code, priv, pub, false, err.message);
     }
 }
 
 async function verify() {
     const code = editor.getValue();
-    const inputs = getPrivate();
+    const priv = getPrivate();
+    const pub = getPublic();
     setStatus('Verifying...');
     document.getElementById('outputConsole').textContent = 'Verifying...\n';
     try {
-        const data = await apiPost('/api/verify', { code, private: inputs });
+        const data = await apiPost('/api/verify', { code, private: priv, public: pub });
         const out = data.ok ? data.stdout : (data.error || data.stdout);
         document.getElementById('outputConsole').textContent = out;
         setStatus(data.ok ? 'Verified' : 'Error', data.ok);
-        addReport('VERIFY', code, inputs, data.ok, out);
+        addReport('VERIFY', code, priv, pub, data.ok, out);
     } catch (err) {
         document.getElementById('outputConsole').textContent = '✗ ' + err.message;
         setStatus('Error', false);
-        addReport('VERIFY', code, inputs, false, err.message);
+        addReport('VERIFY', code, priv, pub, false, err.message);
     }
 }
 
@@ -237,7 +247,8 @@ function downloadReport() {
     reportLog.forEach((r, i) => {
         md += `## ${i + 1}. ${r.action} — ${r.status}\n`;
         md += `- **Time:** ${r.timestamp}\n`;
-        md += `- **Inputs:** \`${r.inputs.join(', ') || '(none)'}\`\n`;
+        md += `- **Private inputs:** \`${(r.private || []).join(', ') || '(none)'}\`\n`;
+        md += `- **Public inputs:** \`${(r.public || []).join(', ') || '(none)'}\`\n`;
         md += `- **Code:**\n\`\`\`\n${r.code}\n\`\`\`\n`;
         md += `- **Result:**\n\`\`\`\n${r.result}\n\`\`\`\n\n`;
     });

@@ -8,6 +8,11 @@ on:
       - 'api/**'
       - 'package*.json'
       - 'vercel.json'
+      - 'Cargo.*'
+      - 'astra_core/**'
+      - 'astra_cli/**'
+      - 'astra_security/**'
+      - '.github/**'
   workflow_dispatch:
 
 concurrency:
