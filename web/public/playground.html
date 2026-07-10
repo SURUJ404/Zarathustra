@@ -49,6 +49,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     <button class="btn btn-success" onclick="prove()">📜 Prove</button>
     <button class="btn btn-danger" onclick="verify()">✅ Verify</button>
     <button class="btn btn-outline" onclick="reset()">↺ Reset</button>
+    <button class="btn btn-outline" onclick="downloadReport()" id="btnReport" disabled>📊 Report</button>
     <a href="index.html" class="btn btn-outline" style="text-decoration:none;margin-left:auto;">ℹ About</a>
     <span style="font-size:11px;color:#888;margin-left:8px" id="apiIndicator"></span>
     <span class="badge" id="statusBadge">Ready</span>
@@ -94,6 +95,19 @@ async function apiPost(path, body) {
 }
 
 let editor;
+let reportLog = [];
+
+function addReport(action, code, inputs, ok, result) {
+    reportLog.push({
+        timestamp: new Date().toISOString(),
+        action,
+        code: code.slice(0, 200),
+        inputs,
+        status: ok ? 'PASS' : 'FAIL',
+        result: (result || '').slice(0, 300),
+    });
+    document.getElementById('btnReport').disabled = false;
+}
 
 (async function() {
     const el = document.getElementById('apiIndicator');
@@ -150,46 +164,58 @@ function switchTab(tab) {
 
 async function compile() {
     const code = editor.getValue();
+    const inputs = getPrivate();
     setStatus('Compiling...');
     document.getElementById('outputConsole').textContent = 'Compiling...\n';
     try {
-        const data = await apiPost('/api/compile', { code, private: getPrivate() });
-        document.getElementById('outputConsole').textContent = data.ok ? data.stdout : (data.error || data.stdout);
+        const data = await apiPost('/api/compile', { code, private: inputs });
+        const out = data.ok ? data.stdout : (data.error || data.stdout);
+        document.getElementById('outputConsole').textContent = out;
         setStatus(data.ok ? 'Compiled' : 'Error', data.ok);
+        addReport('COMPILE', code, inputs, data.ok, out);
     } catch (err) {
         document.getElementById('outputConsole').textContent = '✗ ' + err.message;
         setStatus('Error', false);
+        addReport('COMPILE', code, inputs, false, err.message);
     }
 }
 
 async function prove() {
     const code = editor.getValue();
+    const inputs = getPrivate();
     setStatus('Proving...');
     document.getElementById('outputConsole').textContent = 'Generating proof...\n';
     try {
-        const data = await apiPost('/api/prove', { code, private: getPrivate() });
-        document.getElementById('outputConsole').textContent = data.ok ? data.stdout : (data.error || data.stdout);
+        const data = await apiPost('/api/prove', { code, private: inputs });
+        const out = data.ok ? data.stdout : (data.error || data.stdout);
+        document.getElementById('outputConsole').textContent = out;
         if (data.proof) {
             document.getElementById('outputProof').textContent = JSON.stringify(data.proof, null, 2);
         }
         setStatus(data.ok ? 'Proof ready' : 'Error', data.ok);
+        addReport('PROVE', code, inputs, data.ok, out);
     } catch (err) {
         document.getElementById('outputConsole').textContent = '✗ ' + err.message;
         setStatus('Error', false);
+        addReport('PROVE', code, inputs, false, err.message);
     }
 }
 
 async function verify() {
     const code = editor.getValue();
+    const inputs = getPrivate();
     setStatus('Verifying...');
     document.getElementById('outputConsole').textContent = 'Verifying...\n';
     try {
-        const data = await apiPost('/api/verify', { code, private: getPrivate() });
-        document.getElementById('outputConsole').textContent = data.ok ? data.stdout : (data.error || data.stdout);
+        const data = await apiPost('/api/verify', { code, private: inputs });
+        const out = data.ok ? data.stdout : (data.error || data.stdout);
+        document.getElementById('outputConsole').textContent = out;
         setStatus(data.ok ? 'Verified' : 'Error', data.ok);
+        addReport('VERIFY', code, inputs, data.ok, out);
     } catch (err) {
         document.getElementById('outputConsole').textContent = '✗ ' + err.message;
         setStatus('Error', false);
+        addReport('VERIFY', code, inputs, false, err.message);
     }
 }
 
@@ -197,6 +223,31 @@ async function reset() {
     setStatus('Reset');
     document.getElementById('outputConsole').textContent = '// Reset. Ready.';
     document.getElementById('outputProof').textContent = '';
+}
+
+function downloadReport() {
+    const total = reportLog.length;
+    const pass = reportLog.filter(r => r.status === 'PASS').length;
+    const fail = total - pass;
+    let md = `# Astra Playground Test Report\n`;
+    md += `**Generated:** ${new Date().toISOString()}\n`;
+    md += `**API:** ${API_BASE}\n`;
+    md += `**Total tests:** ${total} | **PASS:** ${pass} | **FAIL:** ${fail}\n\n`;
+    md += `---\n\n`;
+    reportLog.forEach((r, i) => {
+        md += `## ${i + 1}. ${r.action} — ${r.status}\n`;
+        md += `- **Time:** ${r.timestamp}\n`;
+        md += `- **Inputs:** \`${r.inputs.join(', ') || '(none)'}\`\n`;
+        md += `- **Code:**\n\`\`\`\n${r.code}\n\`\`\`\n`;
+        md += `- **Result:**\n\`\`\`\n${r.result}\n\`\`\`\n\n`;
+    });
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `astra-report-${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 </script>
 </body>
