@@ -20,9 +20,8 @@ const PASSKEY = process.env.ASTRA_PASSKEY;
 
 function passkeyAuth(req, res, next) {
     if (IS_VERCEL) return next();
-    if (!PASSKEY) return next();
     const provided = req.headers['x-passkey'] || req.query.passkey;
-    if (!provided || provided !== PASSKEY) {
+    if (!PASSKEY || !provided || provided !== PASSKEY) {
         return res.status(401).json({ ok: false, error: 'unauthorized' });
     }
     next();
