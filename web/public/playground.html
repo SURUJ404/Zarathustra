@@ -15,11 +15,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .btn { padding: 6px 14px; border: none; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
 .btn-primary { background: #0e639c; color: #fff; }
 .btn-primary:hover { background: #1177bb; }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-success { background: #1b6d3e; color: #fff; }
 .btn-success:hover { background: #228b4f; }
-.btn-warning { background: #8a6d3b; color: #fff; }
-.btn-warning:hover { background: #a07d45; }
 .btn-danger { background: #6b3030; color: #fff; }
 .btn-danger:hover { background: #853a3a; }
 .btn-outline { background: transparent; color: #ccc; border: 1px solid #555; }
@@ -37,13 +34,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .output-tab.active { border-bottom-color: #0e639c; color: #fff; }
 .output-tab:hover { background: #333; }
 .output-content { flex: 1; overflow: auto; padding: 12px; font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
-.steps { padding: 8px 12px; border-top: 1px solid #333; background: #252526; }
-.step-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.step-row .btn { flex: 1; min-width: 80px; font-size: 11px; }
-.abi-input { width: 100%; padding: 8px; background: #1e1e1e; border: 1px solid #333; color: #ccc; border-radius: 4px; font-family: monospace; font-size: 12px; margin-top: 6px; resize: vertical; min-height: 40px; }
-.abi-input:focus { outline: none; border-color: #0e639c; }
-.loading { display: inline-block; width: 12px; height: 12px; border: 2px solid #555; border-top-color: #0e639c; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px; vertical-align: middle; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.input-row { padding: 8px 12px; border-top: 1px solid #333; background: #252526; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.input-row input { background: #1e1e1e; border: 1px solid #555; color: #ccc; padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 12px; width: 120px; }
+.input-row input:focus { outline: none; border-color: #0e639c; }
+.input-row label { font-size: 11px; color: #888; }
 .hidden { display: none; }
 </style>
 </head>
@@ -52,11 +46,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   <div class="toolbar">
     <h1>✦ <span>Astra</span> Playground</h1>
     <button class="btn btn-primary" onclick="compile()">▶ Compile</button>
-    <button class="btn btn-success" onclick="computeWitness()" disabled id="btnWitness">🔢 Witness</button>
-    <button class="btn btn-warning" onclick="setup()" disabled id="btnSetup">🔑 Setup</button>
-    <button class="btn btn-danger" onclick="prove()" disabled id="btnProve">📜 Prove</button>
-    <button class="btn btn-outline" onclick="verify()" disabled id="btnVerify">✅ Verify</button>
-    <button class="btn btn-outline" onclick="exportVerifier()" disabled id="btnExport">📄 Solidity</button>
+    <button class="btn btn-success" onclick="prove()">📜 Prove</button>
+    <button class="btn btn-danger" onclick="verify()">✅ Verify</button>
     <button class="btn btn-outline" onclick="reset()">↺ Reset</button>
     <a href="index.html" class="btn btn-outline" style="text-decoration:none;margin-left:auto;">ℹ About</a>
     <span style="font-size:11px;color:#888;margin-left:8px" id="apiIndicator"></span>
@@ -72,25 +63,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     <div class="output-pane">
       <div class="output-tabs">
         <div class="output-tab active" onclick="switchTab('console')">Console</div>
-        <div class="output-tab" onclick="switchTab('r1cs')">R1CS</div>
         <div class="output-tab" onclick="switchTab('proof')">Proof</div>
-        <div class="output-tab" onclick="switchTab('solidity')">Solidity</div>
       </div>
-      <div class="output-content" id="outputConsole">// Ready. Write code and click Compile.</div>
-      <div class="output-content hidden" id="outputR1CS"></div>
+      <div class="output-content" id="outputConsole">// Ready. Write code and click Compile, Prove, or Verify.</div>
       <div class="output-content hidden" id="outputProof"></div>
-      <div class="output-content hidden" id="outputSolidity"></div>
 
-      <div class="steps">
-        <div class="step-row">
-          <select id="curveSelect" style="background:#1e1e1e;color:#ccc;border:1px solid #555;border-radius:4px;padding:4px 8px;font-size:11px;">
-            <option value="bn128">BN128 (Ethereum)</option>
-            <option value="bls12_381">BLS12-381</option>
-            <option value="bls12_377">BLS12-377</option>
-            <option value="pallas">Pallas (Nova)</option>
-          </select>
-          <textarea id="abiArgs" class="abi-input" rows="2" placeholder='ABI args: ["12"] or leave empty'>["12"]</textarea>
-        </div>
+      <div class="input-row">
+        <label for="privInput">Private input:</label>
+        <input id="privInput" type="text" value="12" placeholder="e.g. 12">
+        <span style="font-size:11px;color:#666;">(comma-separated for multiple)</span>
       </div>
     </div>
   </div>
@@ -100,42 +81,28 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 let API_BASE = window.location.origin;
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('api')) API_BASE = urlParams.get('api');
-if (window.ASTRA_API) API_BASE = window.ASTRA_API;
 
 async function apiPost(path, body) {
     const res = await fetch(API_BASE + path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined,
+        body: JSON.stringify(body),
     });
     const text = await res.text();
     try { return JSON.parse(text); }
-    catch {
-        if (API_BASE === window.location.origin) {
-            throw new Error(
-                'Backend not reachable at ' + API_BASE + path +
-                '\n  Deploy the backend server or pass ?api=http://your-server:4000'
-            );
-        }
-        throw new Error('Server returned non-JSON. HTTP ' + res.status + ': ' + text.slice(0, 200));
-    }
+    catch { throw new Error('Server error: ' + text.slice(0, 200)); }
 }
 
 let editor;
-let state = { compiled: false, witnessed: false, setupDone: false, proved: false };
 
 (async function() {
     const el = document.getElementById('apiIndicator');
-    if (API_BASE !== window.location.origin) {
-        el.textContent = 'API: ' + API_BASE;
-    } else {
-        try {
-            const res = await fetch(API_BASE + '/api/health');
-            const ok = res.ok && (await res.json()).status === 'ok';
-            el.textContent = ok ? '🟢 Backend OK' : '🔴 Backend error';
-        } catch {
-            el.textContent = '🔴 No backend - add ?api=http://your-server:4000';
-        }
+    try {
+        const res = await fetch(API_BASE + '/api/health');
+        const data = await res.json();
+        el.textContent = data.astra ? '🟢 Backend OK' : '🔴 No binary';
+    } catch {
+        el.textContent = '🔴 Backend unreachable';
     }
 })();
 
@@ -157,7 +124,7 @@ require(['vs/editor/editor.main'], function () {
 const DEFAULT_CODE = `// Astra - Zero Knowledge DSL
 // Prove you know a number without revealing it
 
-def main(private field x) -> bool {
+def main(field private x) {
     assert(x * x == 144);
     return true;
 }
@@ -169,169 +136,67 @@ function setStatus(msg, ok) {
     badge.className = 'badge' + (ok === true ? ' badge-ok' : ok === false ? ' badge-error' : '');
 }
 
-function setButtons(step) {
-    document.getElementById('btnWitness').disabled = !step.compiled;
-    document.getElementById('btnSetup').disabled = !step.compiled;
-    document.getElementById('btnProve').disabled = !(step.witnessed && step.setupDone);
-    document.getElementById('btnVerify').disabled = !step.proved;
-    document.getElementById('btnExport').disabled = !step.setupDone;
-}
-
-function output(tab, content) {
-    document.getElementById(`output${tab.charAt(0).toUpperCase() + tab.slice(1)}`).textContent = content;
+function getPrivate() {
+    const raw = document.getElementById('privInput').value.trim();
+    return raw ? raw.split(',').map(s => s.trim()).filter(Boolean) : [];
 }
 
 function switchTab(tab) {
     document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.output-content').forEach(t => t.classList.add('hidden'));
     event.target.classList.add('active');
-    document.getElementById(`output${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
+    document.getElementById('output' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
 }
 
 async function compile() {
     const code = editor.getValue();
-    const curve = document.getElementById('curveSelect').value;
     setStatus('Compiling...');
     document.getElementById('outputConsole').textContent = 'Compiling...\n';
     try {
-        const data = await apiPost('/api/compile', { code, curve });
-        if (data.ok) {
-            state.compiled = true;
-            state.witnessed = false;
-            state.setupDone = false;
-            state.proved = false;
-            document.getElementById('outputConsole').textContent =
-                `✓ Compilation successful\n  Constraints: ${data.output.constraints}\n  Curve: ${curve}`;
-            if (data.output.abi) {
-                document.getElementById('outputConsole').textContent +=
-                    `\n  ABI: ${JSON.stringify(data.output.abi, null, 2)}`;
-            }
-        } else {
-            state.compiled = false;
-            document.getElementById('outputConsole').textContent =
-                `✗ Compilation failed\n${data.stderr || data.stdout}`;
-        }
+        const data = await apiPost('/api/compile', { code, private: getPrivate() });
+        document.getElementById('outputConsole').textContent = data.ok ? data.stdout : (data.error || data.stdout);
+        setStatus(data.ok ? 'Compiled' : 'Error', data.ok);
     } catch (err) {
-        document.getElementById('outputConsole').textContent = `✗ ${err.message}`;
-    }
-    setButtons(state);
-    setStatus(state.compiled ? 'Compiled' : 'Error', state.compiled);
-}
-
-async function computeWitness() {
-    const raw = document.getElementById('abiArgs').value.trim();
-    setStatus('Computing witness...');
-    let parsed;
-    try {
-        parsed = raw ? JSON.parse(raw) : null;
-    } catch (e) {
-        document.getElementById('outputConsole').textContent =
-            `✗ Invalid ABI args: not valid JSON.\n  Example: ["12"]\n  Got: ${raw}`;
+        document.getElementById('outputConsole').textContent = '✗ ' + err.message;
         setStatus('Error', false);
-        return;
     }
-    try {
-        const data = await apiPost('/api/compute-witness', { args: parsed });
-        if (data.ok) {
-            state.witnessed = true;
-            document.getElementById('outputConsole').textContent = '✓ Witness computed successfully';
-        } else {
-            state.witnessed = false;
-            document.getElementById('outputConsole').textContent =
-                `✗ Witness failed\n${data.stderr || data.stdout}`;
-        }
-    } catch (err) {
-        document.getElementById('outputConsole').textContent = `✗ ${err.message}`;
-    }
-    setButtons(state);
-    setStatus(state.witnessed ? 'Witness OK' : 'Error', state.witnessed);
-}
-
-async function setup() {
-    setStatus('Generating keys...');
-    try {
-        const data = await apiPost('/api/setup');
-        if (data.ok) {
-            state.setupDone = true;
-            document.getElementById('outputConsole').textContent =
-                '✓ Setup complete\n  Proving key + Verification key generated';
-        } else {
-            state.setupDone = false;
-            document.getElementById('outputConsole').textContent =
-                `✗ Setup failed\n${data.stderr || data.stdout}`;
-        }
-    } catch (err) {
-        document.getElementById('outputConsole').textContent = `✗ ${err.message}`;
-    }
-    setButtons(state);
-    setStatus(state.setupDone ? 'Keys ready' : 'Error', state.setupDone);
 }
 
 async function prove() {
-    setStatus('Generating proof...');
+    const code = editor.getValue();
+    setStatus('Proving...');
+    document.getElementById('outputConsole').textContent = 'Generating proof...\n';
     try {
-        const data = await apiPost('/api/prove');
-        if (data.ok) {
-            state.proved = true;
-            document.getElementById('outputConsole').textContent = '✓ Proof generated successfully';
-            if (data.proof) {
-                document.getElementById('outputProof').textContent =
-                    JSON.stringify(data.proof, null, 2);
-            }
-        } else {
-            state.proved = false;
-            document.getElementById('outputConsole').textContent =
-                `✗ Proof failed\n${data.stderr || data.stdout}`;
+        const data = await apiPost('/api/prove', { code, private: getPrivate() });
+        document.getElementById('outputConsole').textContent = data.ok ? data.stdout : (data.error || data.stdout);
+        if (data.proof) {
+            document.getElementById('outputProof').textContent = JSON.stringify(data.proof, null, 2);
         }
+        setStatus(data.ok ? 'Proof ready' : 'Error', data.ok);
     } catch (err) {
-        document.getElementById('outputConsole').textContent = `✗ ${err.message}`;
+        document.getElementById('outputConsole').textContent = '✗ ' + err.message;
+        setStatus('Error', false);
     }
-    setButtons(state);
-    setStatus(state.proved ? 'Proof ready' : 'Error', state.proved);
 }
 
 async function verify() {
+    const code = editor.getValue();
     setStatus('Verifying...');
+    document.getElementById('outputConsole').textContent = 'Verifying...\n';
     try {
-        const data = await apiPost('/api/verify');
-        if (data.ok) {
-            document.getElementById('outputConsole').textContent = '✓ ✓ ✓ PROOF VERIFIED ✓ ✓ ✓\nThe proof is valid!';
-        } else {
-            document.getElementById('outputConsole').textContent =
-                `✗ Verification failed\n${data.stderr || data.stdout}`;
-        }
+        const data = await apiPost('/api/verify', { code, private: getPrivate() });
+        document.getElementById('outputConsole').textContent = data.ok ? data.stdout : (data.error || data.stdout);
+        setStatus(data.ok ? 'Verified' : 'Error', data.ok);
     } catch (err) {
-        document.getElementById('outputConsole').textContent = `✗ ${err.message}`;
-    }
-    setStatus('Verified');
-}
-
-async function exportVerifier() {
-    setStatus('Exporting...');
-    try {
-        const data = await apiPost('/api/export-verifier');
-        if (data.ok) {
-            document.getElementById('outputSolidity').textContent = data.stdout;
-            switchTab('solidity');
-            setStatus('Solidity exported');
-        } else {
-            document.getElementById('outputConsole').textContent =
-                `✗ Export failed\n${data.stderr || data.stdout}`;
-        }
-    } catch (err) {
-        document.getElementById('outputConsole').textContent = `✗ ${err.message}`;
+        document.getElementById('outputConsole').textContent = '✗ ' + err.message;
+        setStatus('Error', false);
     }
 }
 
 async function reset() {
-    state = { compiled: false, witnessed: false, setupDone: false, proved: false };
-    setButtons(state);
     setStatus('Reset');
     document.getElementById('outputConsole').textContent = '// Reset. Ready.';
-    document.getElementById('outputR1CS').textContent = '';
     document.getElementById('outputProof').textContent = '';
-    document.getElementById('outputSolidity').textContent = '';
-    try { await apiPost('/api/reset'); } catch {}
 }
 </script>
 </body>

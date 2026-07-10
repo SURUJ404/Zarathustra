@@ -32,7 +32,7 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-function run(input, cmd) {
+function run(input, cmd, privateVals) {
     const bin = path.join(BIN_PATH, 'astra');
     if (!fs.existsSync(bin)) {
         return { ok: false, error: 'astra binary not found' };
@@ -40,7 +40,8 @@ function run(input, cmd) {
     const f = path.join(WORK_DIR, `${crypto.randomUUID()}.zara`);
     try {
         fs.writeFileSync(f, input);
-        const out = execSync(`"${bin}" ${cmd} "${f}"`, {
+        const privateArg = privateVals && privateVals.length ? `-r ${privateVals.join(',')}` : '';
+        const out = execSync(`"${bin}" ${cmd} ${privateArg} "${f}"`, {
             cwd: WORK_DIR,
             encoding: 'utf-8',
             maxBuffer: MAX_FILE_SIZE * 1024 * 1024,
@@ -55,12 +56,12 @@ function run(input, cmd) {
 }
 
 app.post('/api/compile', (req, res) => {
-    const r = run(req.body.code, 'prove compile');
+    const r = run(req.body.code, 'prove compile', req.body.private);
     res.json(r);
 });
 
 app.post('/api/prove', (req, res) => {
-    const r = run(req.body.code, 'prove prove');
+    const r = run(req.body.code, 'prove prove', req.body.private);
     const pf = path.join(WORK_DIR, 'proof.json');
     let proof = null;
     if (fs.existsSync(pf)) {
@@ -71,7 +72,7 @@ app.post('/api/prove', (req, res) => {
 });
 
 app.post('/api/verify', (req, res) => {
-    const r = run(req.body.code, 'prove verify');
+    const r = run(req.body.code, 'prove verify', req.body.private);
     res.json(r);
 });
 
