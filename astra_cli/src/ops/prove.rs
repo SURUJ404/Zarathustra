@@ -19,7 +19,7 @@ fn parse_inputs(s: &str) -> Vec<u64> {
 }
 
 fn read_source(m: &clap::ArgMatches) -> Result<String, String> {
-    let path = m.value_of("input").unwrap();
+    let path = m.value_of("input").ok_or("missing input argument")?;
     std::fs::read_to_string(path).map_err(|e| format!("cannot read {}: {}", path, e))
 }
 

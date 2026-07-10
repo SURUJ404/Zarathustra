@@ -57,8 +57,8 @@ impl Compiler {
         idx
     }
 
-    fn get_var(&self, name: &str) -> usize {
-        *self.var_index.get(name).unwrap_or_else(|| panic!("unknown variable: {}", name))
+    fn get_var(&self, name: &str) -> Result<usize, String> {
+        self.var_index.get(name).copied().ok_or_else(|| format!("unknown variable: {}", name))
     }
 
     fn compile_program(
@@ -117,7 +117,7 @@ impl Compiler {
                 Ok(lc)
             }
             Expr::Variable(name) => {
-                let idx = self.get_var(name);
+                let idx = self.get_var(name)?;
                 let mut lc = LinearCombination::new();
                 lc.add_term(idx, Scalar::ONE);
                 Ok(lc)

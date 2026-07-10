@@ -10,7 +10,7 @@ pub fn exec(matches: &clap::ArgMatches) {
 }
 
 fn run_init(m: &clap::ArgMatches) {
-    let name = m.value_of("name").unwrap();
+    let name = m.value_of("name").unwrap_or("project");
     let dir = format!("{}/src", name);
     fs::create_dir_all(&dir).unwrap_or_else(|e| { eprintln!("create dir error: {}", e); std::process::exit(1); });
     let circuit = "def main(field a, field b) -> field {\n    field c = a * b;\n    return c;\n}\n";

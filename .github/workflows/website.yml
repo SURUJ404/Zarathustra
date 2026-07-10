@@ -45,6 +45,9 @@ jobs:
           cp target/release/astra api/astra
           chmod +x api/astra
 
+      - name: Self-audit
+        run: ./target/release/astra audit --deny high .
+
       - name: Install deps
         run: npm ci --omit=dev
 
