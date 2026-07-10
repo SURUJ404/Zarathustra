@@ -46,10 +46,10 @@ jobs:
           mkdir -p web/.vercel
           printf '{"orgId":"%s","projectId":"%s"}\n' \
             "${{ secrets.ORGID }}" \
-            "prj_VhbnkUsDgGsmsqOLMJ3EpN4T0Cqv" \
+            "${{ secrets.PROJECTID }}" \
             > web/.vercel/project.json
           npx --yes vercel@latest deploy --prod \
-            --token="${{ secrets.VERCEL_TOKEN }}" \
+            --token="${{ secrets.ZARATOKEN }}" \
             --scope=${{ secrets.ORGID }} \
             --cwd=web \
             --yes --force
