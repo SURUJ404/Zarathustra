@@ -84,13 +84,25 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 let API_BASE = window.location.origin;
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('api')) API_BASE = urlParams.get('api');
+const PASSKEY = urlParams.get('passkey') || sessionStorage.getItem('astra_passkey') || prompt('Enter API passkey:');
+if (PASSKEY) sessionStorage.setItem('astra_passkey', PASSKEY);
+
+function apiHeaders() {
+    const h = { 'Content-Type': 'application/json' };
+    if (PASSKEY) h['x-passkey'] = PASSKEY;
+    return h;
+}
 
 async function apiPost(path, body) {
     const res = await fetch(API_BASE + path, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: apiHeaders(),
         body: JSON.stringify(body),
     });
+    if (res.status === 401) {
+        sessionStorage.removeItem('astra_passkey');
+        throw new Error('unauthorized — check your passkey');
+    }
     const text = await res.text();
     try { return JSON.parse(text); }
     catch { throw new Error('Server error: ' + text.slice(0, 200)); }
@@ -115,7 +127,8 @@ function addReport(action, code, privateInputs, publicInputs, ok, result) {
 (async function() {
     const el = document.getElementById('apiIndicator');
     try {
-        const res = await fetch(API_BASE + '/api/health');
+        const res = await fetch(API_BASE + '/api/health', { headers: apiHeaders() });
+        if (res.status === 401) { el.textContent = '🔴 Unauthorized — passkey required'; return; }
         const data = await res.json();
         el.textContent = data.astra ? '🟢 Backend OK' : '🔴 No binary';
     } catch {

@@ -16,13 +16,24 @@ const WORK_DIR = process.env.WORK_DIR || (IS_VERCEL ? '/tmp/astra-work' : path.j
 const BIN_PATH = process.env.ASTRA_BIN || (IS_VERCEL ? path.join(API_DIR, '..', 'api') : path.join(API_DIR, '..', 'target', 'debug'));
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '50', 10);
 
+const PASSKEY = process.env.ASTRA_PASSKEY;
+
+function passkeyAuth(req, res, next) {
+    if (!PASSKEY) return next();
+    const provided = req.headers['x-passkey'] || req.query.passkey;
+    if (!provided || provided !== PASSKEY) {
+        return res.status(401).json({ ok: false, error: 'unauthorized' });
+    }
+    next();
+}
+
 fs.mkdirSync(WORK_DIR, { recursive: true });
 
 app.use(cors());
 app.use(express.json({ limit: `${MAX_FILE_SIZE}mb` }));
 app.use(express.static(PUBLIC_DIR));
 
-app.get('/api/health', (req, res) => {
+app.get('/api/health', passkeyAuth, (req, res) => {
     const bin = path.join(BIN_PATH, 'astra');
     res.json({
         status: 'ok',
@@ -56,12 +67,12 @@ function run(input, cmd, privateVals, publicVals) {
     }
 }
 
-app.post('/api/compile', (req, res) => {
+app.post('/api/compile', passkeyAuth, (req, res) => {
     const r = run(req.body.code, 'prove compile', req.body.private, req.body.public);
     res.json(r);
 });
 
-app.post('/api/prove', (req, res) => {
+app.post('/api/prove', passkeyAuth, (req, res) => {
     const r = run(req.body.code, 'prove prove', req.body.private, req.body.public);
     const pf = path.join(WORK_DIR, 'proof.json');
     let proof = null;
@@ -72,7 +83,7 @@ app.post('/api/prove', (req, res) => {
     res.json({ ...r, proof });
 });
 
-app.post('/api/verify', (req, res) => {
+app.post('/api/verify', passkeyAuth, (req, res) => {
     const r = run(req.body.code, 'prove verify', req.body.private, req.body.public);
     res.json(r);
 });
