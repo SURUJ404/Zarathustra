@@ -5,3 +5,4 @@ proof.json
 .DS_Store
 node_modules/
 web/work/
+api/astra
