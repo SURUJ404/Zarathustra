@@ -44,12 +44,13 @@ jobs:
 
       - name: Deploy to Vercel
         run: |
-          mkdir -p .vercel
+          mkdir -p web/.vercel
           printf '{"orgId":"%s","projectId":"%s"}\n' \
             "${{ secrets.ORGID }}" \
             "${{ secrets.PROJECTID }}" \
-            > .vercel/project.json
+            > web/.vercel/project.json
           npx --yes vercel@latest deploy --prod \
             --token="${{ secrets.ZARATOKEN }}" \
             --scope=${{ secrets.ORGID }} \
+            --cwd=web \
             --yes --force
