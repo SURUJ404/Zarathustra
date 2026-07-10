@@ -1,9 +1,8 @@
 {
-  "name": "astra-web",
-  "version": "0.1.0",
+  "name": "zarathustra",
   "private": true,
   "scripts": {
-    "start": "node server.js"
+    "start": "node web/server.js"
   },
   "dependencies": {
     "express": "^4.18",

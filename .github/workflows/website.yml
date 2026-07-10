@@ -6,6 +6,7 @@ on:
     paths:
       - 'web/**'
       - 'api/**'
+      - 'package*.json'
       - 'vercel.json'
   workflow_dispatch:
 
@@ -41,7 +42,6 @@ jobs:
 
       - name: Install deps
         run: npm ci --omit=dev
-        working-directory: web
 
       - name: Deploy to Vercel
         run: |
