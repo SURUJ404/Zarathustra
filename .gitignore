@@ -3,3 +3,5 @@ proof.json
 *.swp
 *.swo
 .DS_Store
+web/work/
+web/node_modules/
