@@ -20,7 +20,7 @@ const PASSKEY = process.env.ASTRA_PASSKEY;
 
 function passkeyAuth(req, res, next) {
     if (IS_VERCEL) return next();
-    const provided = req.headers['x-passkey'] || req.query.passkey;
+    const provided = req.headers['x-passkey'];
     if (!PASSKEY || !provided || provided !== PASSKEY) {
         return res.status(401).json({ ok: false, error: 'unauthorized' });
     }
@@ -43,6 +43,11 @@ app.get('/api/health', passkeyAuth, (req, res) => {
     });
 });
 
+function sanitize(vals) {
+    if (!Array.isArray(vals)) return [];
+    return vals.filter(v => typeof v === 'string' && /^[a-zA-Z0-9_,.\-]+$/.test(v));
+}
+
 function run(input, cmd, privateVals, publicVals) {
     const bin = path.join(BIN_PATH, 'astra');
     if (!fs.existsSync(bin)) {
@@ -51,13 +56,16 @@ function run(input, cmd, privateVals, publicVals) {
     const f = path.join(WORK_DIR, `${crypto.randomUUID()}.zara`);
     try {
         fs.writeFileSync(f, input);
-        const privateArg = privateVals && privateVals.length ? `-r ${privateVals.join(',')}` : '';
-        const publicArg = publicVals && publicVals.length ? `-p ${publicVals.join(',')}` : '';
+        const pv = sanitize(privateVals);
+        const pb = sanitize(publicVals);
+        const privateArg = pv.length ? `-r ${pv.join(',')}` : '';
+        const publicArg = pb.length ? `-p ${pb.join(',')}` : '';
         const out = execSync(`"${bin}" ${cmd} ${privateArg} ${publicArg} "${f}"`, {
             cwd: WORK_DIR,
             encoding: 'utf-8',
             maxBuffer: MAX_FILE_SIZE * 1024 * 1024,
             timeout: 30000,
+            shell: false,
         });
         return { ok: true, stdout: out.trim() };
     } catch (e) {
@@ -68,11 +76,17 @@ function run(input, cmd, privateVals, publicVals) {
 }
 
 app.post('/api/compile', passkeyAuth, (req, res) => {
+    if (typeof req.body.code !== 'string') {
+        return res.status(400).json({ ok: false, error: 'code must be a string' });
+    }
     const r = run(req.body.code, 'prove compile', req.body.private, req.body.public);
     res.json(r);
 });
 
 app.post('/api/prove', passkeyAuth, (req, res) => {
+    if (typeof req.body.code !== 'string') {
+        return res.status(400).json({ ok: false, error: 'code must be a string' });
+    }
     const r = run(req.body.code, 'prove prove', req.body.private, req.body.public);
     const pf = path.join(WORK_DIR, 'proof.json');
     let proof = null;
@@ -84,6 +98,9 @@ app.post('/api/prove', passkeyAuth, (req, res) => {
 });
 
 app.post('/api/verify', passkeyAuth, (req, res) => {
+    if (typeof req.body.code !== 'string') {
+        return res.status(400).json({ ok: false, error: 'code must be a string' });
+    }
     const r = run(req.body.code, 'prove verify', req.body.private, req.body.public);
     res.json(r);
 });
