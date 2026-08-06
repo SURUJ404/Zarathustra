@@ -54,11 +54,11 @@ fn lagrange(points: &[(Scalar, Scalar)]) -> Vec<Scalar> {
     for i in 0..n {
         let (xi, yi) = points[i];
         let mut basis = vec![Scalar::ONE];
-        for j in 0..n {
+        for (j, point) in points.iter().enumerate() {
             if i == j {
                 continue;
             }
-            let xj = points[j].0;
+            let xj = point.0;
             let d = (xi - xj).invert().unwrap_or(Scalar::ZERO);
             basis = poly_mul(&basis, &[-xj * d, d]);
         }
@@ -381,7 +381,7 @@ pub fn verify(vk: &LegacyVerifyingKey, public_inputs: &[Scalar], proof: &LegacyP
     let mut ic = vk.ic[0].to_curve();
     for (i, input) in public_inputs.iter().enumerate() {
         if i + 1 < vk.ic.len() {
-            ic = ic + vk.ic[i + 1].to_curve() * input;
+            ic += vk.ic[i + 1].to_curve() * input;
         }
     }
     let ic = ic.to_affine();
