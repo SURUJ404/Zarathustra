@@ -186,16 +186,10 @@ footer a { color: var(--accent); text-decoration: none; }
 
 <section class="hero">
     <h1>CLI <span>Documentation</span></h1>
-    <p>The Astra toolchain: Zara DSL, Groth16 proving, auditing, and publishing.</p>
+    <p>Every command in the Astra toolchain.</p>
 </section>
 
 <div class="container">
-
-<p style="color: var(--text2); font-size: 14px; margin-bottom: 24px;">
-Every pipeline command operates on Zara (`.zara`) source files and writes artifacts
-to the <strong>current working directory</strong>: <code>pk.json</code>, <code>vk.json</code>,
-<code>proof.json</code>. Run <code>astra &lt;cmd&gt; --help</code> for exact usage on your machine.
-</p>
 
 <input type="text" class="search-box" id="search" placeholder="Search commands…" oninput="filterCommands()">
 
@@ -209,35 +203,35 @@ to the <strong>current working directory</strong>: <code>pk.json</code>, <code>v
 <tbody>
 <tr>
     <td class="cmd">prove compile</td>
-    <td class="desc">Compile a <code>.zara</code> file into R1CS + witness</td>
+    <td class="desc">Compile a <code>.zara</code> file into a constraint system (R1CS)</td>
+</tr>
+<tr>
+    <td class="cmd">prove witness</td>
+    <td class="desc">Execute the compiled program with given inputs to compute a witness</td>
 </tr>
 <tr>
     <td class="cmd">prove setup</td>
-    <td class="desc">Generate the CRS: writes <code>pk.json</code> + <code>vk.json</code></td>
+    <td class="desc">Generate proving key and verification key from a compiled program</td>
 </tr>
 <tr>
-    <td class="cmd">prove prove</td>
-    <td class="desc">Generate a Groth16 proof: writes <code>proof.json</code></td>
+    <td class="cmd">prove generate</td>
+    <td class="desc">Generate a zero-knowledge proof from compiled program + witness + proving key</td>
 </tr>
 <tr>
     <td class="cmd">prove verify</td>
-    <td class="desc">Honestly verify <code>proof.json</code> against <code>vk.json</code> + bound public inputs</td>
+    <td class="desc">Verify a proof against a verification key</td>
 </tr>
 <tr>
-    <td class="cmd">audit</td>
-    <td class="desc">Static security scan of circuits and Solidity verifiers</td>
+    <td class="cmd">audit circuit</td>
+    <td class="desc">Scan circuits for security vulnerabilities</td>
 </tr>
 <tr>
-    <td class="cmd">deploy init</td>
-    <td class="desc">Scaffold a new circuit project</td>
+    <td class="cmd">audit solidity</td>
+    <td class="desc">Scan Solidity verifier contracts for vulnerabilities</td>
 </tr>
 <tr>
     <td class="cmd">deploy verifier</td>
-    <td class="desc">Solidity verifier export (errors out until real EVM export lands)</td>
-</tr>
-<tr>
-    <td class="cmd">publish</td>
-    <td class="desc">Export test vectors / verifiers for target platforms</td>
+    <td class="desc">Export a Solidity verifier contract from a verification key</td>
 </tr>
 </tbody>
 </table>
@@ -251,22 +245,37 @@ to the <strong>current working directory</strong>: <code>pk.json</code>, <code>v
     </div>
     <div class="cmd-body">
         <h4>Description</h4>
-        <p>Compiles a <code>.zara</code> source file into a constraint system (R1CS), evaluates the witness, and prints the circuit summary.</p>
+        <p>Compiles a <code>.zara</code> source file into a flattened R1CS constraint system using the Groth16 backend.</p>
         <h4>Usage</h4>
-        <pre><span class="prompt">$</span> astra prove compile [OPTIONS] &lt;input&gt;</pre>
+        <pre><span class="prompt">$</span> astra prove compile -i program.zara --curve bn128</pre>
         <h4>Options</h4>
         <ul>
-            <li><code>&lt;input&gt;</code> — Source file (required)</li>
-            <li><code>-p, --public</code> — Comma-separated public inputs</li>
-            <li><code>-r, --private</code> — Comma-separated private inputs</li>
+            <li><code>-i, --input</code> — Path to the <code>.zara</code> source file</li>
+            <li><code>--curve</code> — Target curve: <code>bn128</code>, <code>bls12_381</code>, <code>bls12_377</code>, <code>pallas</code> (default: <code>bn128</code>)</li>
         </ul>
         <h4>Example</h4>
-        <pre><span class="prompt">$</span> astra prove compile -p 8 -r 3,5 examples/sum.zara
-<span class="output">=== Circuit ===
-  Variables:   4
-  Public:      2
-  Private:     2
-  Constraints: 1</span></pre>
+        <pre><span class="prompt">$</span> astra prove compile -i program.zara --curve bn128
+<span class="output">Compiled code written to 'out'
+Number of constraints: 2</span></pre>
+    </div>
+</div>
+
+<div class="cmd-detail">
+    <div class="cmd-header" onclick="toggleCmd(this)">
+        <h3><span class="cmd-name">prove witness</span></h3>
+        <span style="color:var(--text2);font-size:20px;">▾</span>
+    </div>
+    <div class="cmd-body">
+        <h4>Description</h4>
+        <p>Executes the compiled program with provided inputs to compute a valid witness for proof generation.</p>
+        <h4>Usage</h4>
+        <pre><span class="prompt">$</span> astra prove witness -i out --stdin <<< '["42"]'</pre>
+        <h4>Options</h4>
+        <ul>
+            <li><code>-i, --input</code> — Path to compiled binary</li>
+            <li><code>--stdin</code> — Read JSON arguments from stdin</li>
+            <li><code>--output</code> — Path to write witness (default: <code>witness</code>)</li>
+        </ul>
     </div>
 </div>
 
@@ -277,48 +286,22 @@ to the <strong>current working directory</strong>: <code>pk.json</code>, <code>v
     </div>
     <div class="cmd-body">
         <h4>Description</h4>
-        <p>Generates the trusted setup (CRS) for the circuit. Writes <code>pk.json</code> and <code>vk.json</code>.</p>
+        <p>Generates a proving key and verification key from a compiled constraint system.</p>
         <h4>Usage</h4>
-        <pre><span class="prompt">$</span> astra prove setup [OPTIONS] &lt;input&gt;</pre>
-        <h4>Options</h4>
-        <ul>
-            <li><code>&lt;input&gt;</code> — Source file (required)</li>
-            <li><code>-p, --public</code> — Comma-separated public inputs</li>
-            <li><code>-r, --private</code> — Comma-separated private inputs</li>
-            <li><code>--backend</code> — <code>ark-groth16</code> (default) or <code>legacy</code></li>
-        </ul>
-        <h4>Example</h4>
-        <pre><span class="prompt">$</span> astra prove setup -p 8 -r 3,5 examples/sum.zara
-<span class="output">=== Trusted Setup Complete ===
-  Backend:     ark-groth16
-  Curve:       bls12-381
-  Wrote pk.json, vk.json</span></pre>
+        <pre><span class="prompt">$</span> astra prove setup -i out</pre>
     </div>
 </div>
 
 <div class="cmd-detail">
     <div class="cmd-header" onclick="toggleCmd(this)">
-        <h3><span class="cmd-name">prove prove</span></h3>
+        <h3><span class="cmd-name">prove generate</span></h3>
         <span style="color:var(--text2);font-size:20px;">▾</span>
     </div>
     <div class="cmd-body">
         <h4>Description</h4>
-        <p>Generates a Groth16 proof and writes <code>proof.json</code>, binding the public inputs into it.</p>
+        <p>Generates a zero-knowledge proof using a compiled program, witness, and proving key.</p>
         <h4>Usage</h4>
-        <pre><span class="prompt">$</span> astra prove prove [OPTIONS] &lt;input&gt;</pre>
-        <h4>Options</h4>
-        <ul>
-            <li><code>&lt;input&gt;</code> — Source file (required)</li>
-            <li><code>-p, --public</code> — Comma-separated public inputs</li>
-            <li><code>-r, --private</code> — Comma-separated private inputs</li>
-            <li><code>--backend</code> — <code>ark-groth16</code> (default) or <code>legacy</code></li>
-        </ul>
-        <h4>Example</h4>
-        <pre><span class="prompt">$</span> astra prove prove -p 8 -r 3,5 examples/sum.zara
-<span class="output">=== Proof Generated ===
-  Backend:     ark-groth16
-  Curve:       bls12-381
-  Saved to proof.json</span></pre>
+        <pre><span class="prompt">$</span> astra prove generate -i out -w witness -p proving.key</pre>
     </div>
 </div>
 
@@ -329,62 +312,35 @@ to the <strong>current working directory</strong>: <code>pk.json</code>, <code>v
     </div>
     <div class="cmd-body">
         <h4>Description</h4>
-        <p>Verifies <code>proof.json</code> against <code>vk.json</code> and the public inputs <strong>bound into the proof</strong>. Refuses tampered proofs or mismatched keys with a non-zero exit.</p>
+        <p>Verifies a proof against a verification key.</p>
         <h4>Usage</h4>
-        <pre><span class="prompt">$</span> astra prove verify [OPTIONS] [input]</pre>
-        <h4>Options</h4>
-        <ul>
-            <li><code>[input]</code> — Source file (kept for CLI compatibility; verify reads <code>proof.json</code>)</li>
-            <li><code>-p, --public</code> — Public inputs (validated against the bound ones)</li>
-            <li><code>--backend</code> — <code>ark-groth16</code> (default) or <code>legacy</code></li>
-        </ul>
-        <h4>Example</h4>
-        <pre><span class="prompt">$</span> astra prove verify examples/sum.zara
-<span class="output">=== Verification ===
-  Backend:      ark-groth16
-  Proof:        ./proof.json
-  ✓ PROOF VERIFIED</span></pre>
+        <pre><span class="prompt">$</span> astra prove verify -v verification.key -j proof.json</pre>
     </div>
 </div>
 
 <div class="cmd-detail">
     <div class="cmd-header" onclick="toggleCmd(this)">
-        <h3><span class="cmd-name">audit</span></h3>
+        <h3><span class="cmd-name">audit circuit</span></h3>
         <span style="color:var(--text2);font-size:20px;">▾</span>
     </div>
     <div class="cmd-body">
         <h4>Description</h4>
-        <p>Static security scan of circuits and smart contracts. Includes a signal-flow analysis that flags unconstrained public inputs, plus CEI/reentrancy checks for Solidity.</p>
+        <p>Scans circuit files for common security vulnerabilities such as under-constrained signals, missing assertions, and potential information leaks.</p>
         <h4>Usage</h4>
-        <pre><span class="prompt">$</span> astra audit [FLAGS] [OPTIONS] [target]</pre>
-        <h4>Options</h4>
-        <ul>
-            <li><code>[target]</code> — File or directory to scan (default <code>.</code>)</li>
-            <li><code>-v, --verbose</code> — Verbose output</li>
-            <li><code>-f, --format</code> — <code>terminal</code> | <code>json</code> | <code>html</code> (default <code>terminal</code>)</li>
-            <li><code>-o, --output</code> — Write the report to a file</li>
-            <li><code>--deny</code> — <code>critical</code> | <code>high</code> | <code>medium</code> | <code>any</code>; exit non-zero if findings at/above severity</li>
-        </ul>
-        <h4>Example</h4>
-        <pre><span class="prompt">$</span> astra audit --format json -o audit.json .
-<span class="output">=== Security Scan Complete ===</span></pre>
+        <pre><span class="prompt">$</span> astra audit circuit -i program.zara</pre>
     </div>
 </div>
 
 <div class="cmd-detail">
     <div class="cmd-header" onclick="toggleCmd(this)">
-        <h3><span class="cmd-name">deploy init</span></h3>
+        <h3><span class="cmd-name">audit solidity</span></h3>
         <span style="color:var(--text2);font-size:20px;">▾</span>
     </div>
     <div class="cmd-body">
         <h4>Description</h4>
-        <p>Scaffolds a new circuit project with a starter <code>src/main.zara</code>.</p>
+        <p>Audits Solidity verifier contracts for insecure patterns, gas inefficiencies, and known vulnerability signatures.</p>
         <h4>Usage</h4>
-        <pre><span class="prompt">$</span> astra deploy init &lt;name&gt;</pre>
-        <h4>Example</h4>
-        <pre><span class="prompt">$</span> astra deploy init my-circuit
-<span class="output">Initialized project: my-circuit
-  my-circuit/src/main.zara - circuit source</span></pre>
+        <pre><span class="prompt">$</span> astra audit solidity -i verifier.sol</pre>
     </div>
 </div>
 
@@ -395,37 +351,9 @@ to the <strong>current working directory</strong>: <code>pk.json</code>, <code>v
     </div>
     <div class="cmd-body">
         <h4>Description</h4>
-        <p>Export a Solidity verifier. This is honest-by-default: rather than emitting a stub contract that always returns <code>true</code>, it errors out with guidance to use <code>astra publish -t evm</code> once that lands.</p>
+        <p>Exports a Solidity verifier contract from a verification key, ready to deploy on Ethereum.</p>
         <h4>Usage</h4>
-        <pre><span class="prompt">$</span> astra deploy verifier</pre>
-    </div>
-</div>
-
-<div class="cmd-detail">
-    <div class="cmd-header" onclick="toggleCmd(this)">
-        <h3><span class="cmd-name">publish</span></h3>
-        <span style="color:var(--text2);font-size:20px;">▾</span>
-    </div>
-    <div class="cmd-body">
-        <h4>Description</h4>
-        <p>Exports verifiers / test vectors for target platforms.</p>
-        <h4>Usage</h4>
-        <pre><span class="prompt">$</span> astra publish [OPTIONS]</pre>
-        <h4>Options</h4>
-        <ul>
-            <li><code>-t, --target</code> — <code>evm</code> | <code>starknet</code> | <code>wasm</code> | <code>aleo</code> | <code>jt</code> (default <code>evm</code>)</li>
-        </ul>
-        <h4>Details</h4>
-        <ul>
-            <li><code>jt</code> — reads <code>proof.json</code> + <code>vk.json</code>, writes <code>zara_test_vectors.json</code> with real artifacts</li>
-            <li><code>evm</code> — honestly refuses BLS12-381 (no Ethereum pairing precompile); meaningful only for BN254</li>
-            <li><code>starknet</code>, <code>wasm</code>, <code>aleo</code> — not yet implemented</li>
-        </ul>
-        <h4>Example</h4>
-        <pre><span class="prompt">$</span> astra publish -t jt
-<span class="output">publish: wrote zara_test_vectors.json
-  curve:    bls12-381
-  protocol: groth16</span></pre>
+        <pre><span class="prompt">$</span> astra deploy verifier -i verification.key</pre>
     </div>
 </div>
 
@@ -436,7 +364,7 @@ to the <strong>current working directory</strong>: <code>pk.json</code>, <code>v
     <p style="margin-top: 8px;">
         <a href="index.html">Home</a> ·
         <a href="playground.html">Playground</a> ·
-        <a href="https://github.com/SURUJ404/Zarathustra">GitHub</a>
+        <a href="https://github.com/SURUJ404/ZARA">GitHub</a>
     </p>
 </footer>
 
