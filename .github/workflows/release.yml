@@ -1,0 +1,64 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: release-${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: x86_64-apple-darwin
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Build release binary
+        run: cargo build --release --locked -p astra_cli
+
+      - name: Archive binary
+        shell: bash
+        run: |
+          EXE=$( [ "${{ runner.os }}" = "Windows" ] && echo "target/release/astra.exe" || echo "target/release/astra" )
+          mkdir -p stage
+          mv "$EXE" stage/astra-${{ matrix.target }}$( [ "${{ runner.os }}" = "Windows" ] && echo ".exe" )
+          tar -czf astra-${{ matrix.target }}.tar.gz -C stage .
+        env:
+          runner: ${{ runner.os }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-${{ matrix.target }}
+          path: astra-${{ matrix.target }}.tar.gz
+
+  publish:
+    name: publish-release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**/astra-*.tar.gz
+          generate_release_notes: true

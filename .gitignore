@@ -6,3 +6,8 @@ proof.json
 node_modules/
 web/work/
 api/astra
+web/public/pkg/
+*.wasm
+.idea/
+.vscode/
+*.log

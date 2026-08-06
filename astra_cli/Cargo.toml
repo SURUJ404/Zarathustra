@@ -2,15 +2,20 @@
 name = "astra_cli"
 version = "0.1.0"
 edition = "2021"
+license = "Apache-2.0"
+description = "Astra zkSNARK toolkit CLI"
 
 [[bin]]
 name = "astra"
 path = "src/main.rs"
 
 [dependencies]
-astra_core = { path = "../astra_core" }
+astra_ir = { path = "../astra_ir" }
+astra_codegen = { path = "../astra_codegen" }
+astra_prover = { path = "../astra_prover" }
+astra_publish = { path = "../astra_publish" }
 astra_security = { path = "../astra_security" }
-clap = "2"
-serde_json = "1"
-bls12_381 = "0.8"
-ff = "0.13"
+clap.workspace = true
+serde_json.workspace = true
+bls12_381.workspace = true
+ff.workspace = true

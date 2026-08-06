@@ -1,10 +1,8 @@
 use crate::Finding;
+use quote::ToTokens;
 use syn::spanned::Spanned;
 use syn::visit::Visit;
-use syn::{
-    Expr, ExprBinary, ExprCall, ExprMethodCall, ItemFn, Macro, Stmt,
-};
-use quote::ToTokens;
+use syn::{Expr, ExprBinary, ExprCall, ExprMethodCall, ItemFn, Macro, Stmt};
 
 pub fn analyze(code: &str, file: &str) -> Vec<Finding> {
     let syntax = match syn::parse_file(code) {
@@ -36,7 +34,15 @@ impl FindingCollector {
             .unwrap_or_default()
     }
 
-    fn push(&mut self, severity: &str, category: &str, title: &str, line: usize, desc: &str, fix: &str) {
+    fn push(
+        &mut self,
+        severity: &str,
+        category: &str,
+        title: &str,
+        line: usize,
+        desc: &str,
+        fix: &str,
+    ) {
         self.findings.push(Finding {
             severity: severity.to_string(),
             category: category.to_string(),
@@ -89,11 +95,7 @@ impl<'ast> Visit<'ast> for FindingCollector {
 
     fn visit_expr_call(&mut self, node: &'ast ExprCall) {
         if let Expr::Path(ref path_expr) = *node.func {
-            let name = path_expr
-                .path
-                .segments
-                .last()
-                .map(|s| s.ident.to_string());
+            let name = path_expr.path.segments.last().map(|s| s.ident.to_string());
 
             if let Some(n) = name {
                 let loc = self.line_of(&node.func);
@@ -187,7 +189,9 @@ impl<'ast> Visit<'ast> for FindingCollector {
         let severity = if has_pointer { "CRITICAL" } else { "HIGH" };
         let mut desc = "Unsafe block bypasses Rust's safety guarantees.".to_string();
         if has_pointer {
-            desc.push_str(" Raw pointers are created inside — the compiler cannot verify memory safety.");
+            desc.push_str(
+                " Raw pointers are created inside — the compiler cannot verify memory safety.",
+            );
         }
         let title = if has_pointer {
             "Unsafe Block with Raw Pointers"
@@ -242,7 +246,11 @@ impl<'ast> Visit<'ast> for FindingCollector {
 
         if is_arithmetic {
             let loc = self.line_of(node);
-            let lhs_line = self.lines.get(loc.saturating_sub(2)).map(|s| s.trim()).unwrap_or("");
+            let lhs_line = self
+                .lines
+                .get(loc.saturating_sub(2))
+                .map(|s| s.trim())
+                .unwrap_or("");
 
             let is_safe_arithmetic = lhs_line.contains("wrapping_")
                 || lhs_line.contains("checked_")

@@ -1,13 +1,13 @@
-use crate::ir::*;
+use astra_ir::ir::*;
 use bls12_381::Scalar;
 
-#[derive(Debug)]
-pub struct ParseError {
-    pub msg: String,
-}
+use crate::error::ParseError;
 
 pub fn parse(input: &str) -> Result<Program, ParseError> {
-    let mut p = Parser { chars: input.chars().collect(), pos: 0 };
+    let mut p = Parser {
+        chars: input.chars().collect(),
+        pos: 0,
+    };
     p.parse_program()
 }
 
@@ -26,7 +26,9 @@ impl Parser {
             if c == '/' && self.chars.get(self.pos + 1) == Some(&'/') {
                 self.pos += 2;
                 while let Some(c) = self.peek() {
-                    if c == '\n' { break; }
+                    if c == '\n' {
+                        break;
+                    }
                     self.pos += 1;
                 }
             } else if c == '/' && self.chars.get(self.pos + 1) == Some(&'*') {
@@ -49,7 +51,7 @@ impl Parser {
     fn expect(&mut self, ch: char) -> Result<(), ParseError> {
         self.skip_whitespace();
         if self.peek() != Some(ch) {
-            return Err(ParseError { msg: format!("expected '{}'", ch) });
+            return Err(ParseError::at(format!("expected '{}'", ch), self.pos));
         }
         self.pos += 1;
         Ok(())
@@ -60,7 +62,10 @@ impl Parser {
         let start = self.pos;
         if let Some(c) = self.peek() {
             if !c.is_ascii_alphabetic() && c != '_' {
-                return Err(ParseError { msg: format!("expected identifier at pos {}", self.pos) });
+                return Err(ParseError::at(
+                    format!("expected identifier at pos {}", self.pos),
+                    self.pos,
+                ));
             }
             self.pos += 1;
         }
@@ -89,10 +94,13 @@ impl Parser {
             }
         }
         if start == self.pos {
-            return Err(ParseError { msg: format!("expected number at pos {}", self.pos) });
+            return Err(ParseError::at(
+                format!("expected number at pos {}", self.pos),
+                self.pos,
+            ));
         }
         let s: String = self.chars[start..self.pos].iter().collect();
-        scalar_from_dec_str(&s).map_err(|e| ParseError { msg: e })
+        astra_ir::types::scalar_from_dec_str(&s).map_err(|e| ParseError::at(e, start))
     }
 
     fn parse_expr(&mut self) -> Result<Expr, ParseError> {
@@ -153,8 +161,11 @@ impl Parser {
                 let name = self.parse_ident()?;
                 Ok(Expr::Variable(name))
             }
-            Some(c) => Err(ParseError { msg: format!("unexpected token '{}'", c) }),
-            None => Err(ParseError { msg: "unexpected end of input".into() }),
+            Some(c) => Err(ParseError::at(
+                format!("unexpected token '{}'", c),
+                self.pos,
+            )),
+            None => Err(ParseError::at("unexpected end of input", self.pos)),
         }
     }
 
@@ -165,10 +176,15 @@ impl Parser {
         let mut params = Vec::new();
         loop {
             self.skip_whitespace();
-            if self.peek() == Some(')') { break; }
+            if self.peek() == Some(')') {
+                break;
+            }
             let ty = self.parse_ident()?;
             if ty != "field" {
-                return Err(ParseError { msg: format!("unsupported type '{}'", ty) });
+                return Err(ParseError::at(
+                    format!("unsupported type '{}'", ty),
+                    self.pos,
+                ));
             }
             self.skip_whitespace();
             let is_private = if self.peek() == Some('p') {
@@ -200,7 +216,9 @@ impl Parser {
         let mut stmts = Vec::new();
         loop {
             self.skip_whitespace();
-            if self.peek() == Some('}') || self.peek().is_none() { break; }
+            if self.peek() == Some('}') || self.peek().is_none() {
+                break;
+            }
             stmts.push(self.parse_stmt()?);
         }
         Ok(stmts)
@@ -218,7 +236,10 @@ impl Parser {
                     self.expect('}')?;
                     return Ok(Stmt::If { cond, body: then });
                 }
-                return Err(ParseError { msg: format!("unknown keyword '{}'", kw) });
+                Err(ParseError::at(
+                    format!("unknown keyword '{}'", kw),
+                    self.pos,
+                ))
             }
             Some('r') => {
                 let kw = self.parse_ident()?;
@@ -227,7 +248,10 @@ impl Parser {
                     self.expect(';')?;
                     return Ok(Stmt::Return(val));
                 }
-                return Err(ParseError { msg: format!("unknown keyword '{}'", kw) });
+                Err(ParseError::at(
+                    format!("unknown keyword '{}'", kw),
+                    self.pos,
+                ))
             }
             Some('a') => {
                 let kw = self.parse_ident()?;
@@ -248,7 +272,10 @@ impl Parser {
                     self.expect(';')?;
                     return Ok(Stmt::Constrain { left, right });
                 }
-                return Err(ParseError { msg: format!("unknown keyword '{}'", kw) });
+                Err(ParseError::at(
+                    format!("unknown keyword '{}'", kw),
+                    self.pos,
+                ))
             }
             Some('f') => {
                 let _ty = self.parse_ident()?;
@@ -258,12 +285,18 @@ impl Parser {
                     self.pos += 1;
                     let init = self.parse_expr()?;
                     self.expect(';')?;
-                    Ok(Stmt::Declare { name, init: Some(init) })
+                    Ok(Stmt::Declare {
+                        name,
+                        init: Some(init),
+                    })
                 } else if self.peek() == Some(';') {
                     self.pos += 1;
                     Ok(Stmt::Declare { name, init: None })
                 } else {
-                    Err(ParseError { msg: format!("expected '=' or ';' after '{}'", name) })
+                    Err(ParseError::at(
+                        format!("expected '=' or ';' after '{}'", name),
+                        self.pos,
+                    ))
                 }
             }
             Some(c) if c.is_ascii_alphabetic() || c == '_' => {
@@ -273,13 +306,19 @@ impl Parser {
                     self.pos += 1;
                     let init = self.parse_expr()?;
                     self.expect(';')?;
-                    Ok(Stmt::Declare { name, init: Some(init) })
+                    Ok(Stmt::Declare {
+                        name,
+                        init: Some(init),
+                    })
                 } else {
-                    Err(ParseError { msg: format!("expected '=' after '{}'", name) })
+                    Err(ParseError::at(
+                        format!("expected '=' after '{}'", name),
+                        self.pos,
+                    ))
                 }
             }
-            Some(_) => Err(ParseError { msg: "unexpected token in statement".into() }),
-            None => Err(ParseError { msg: "unexpected end of input".into() }),
+            Some(_) => Err(ParseError::at("unexpected token in statement", self.pos)),
+            None => Err(ParseError::at("unexpected end of input", self.pos)),
         }
     }
 
@@ -287,7 +326,7 @@ impl Parser {
         self.skip_whitespace();
         let kw = self.parse_ident()?;
         if kw != "def" {
-            return Err(ParseError { msg: "expected 'def'".into() });
+            return Err(ParseError::at("expected 'def'", self.pos));
         }
         let main = self.parse_def()?;
         Ok(Program { main })

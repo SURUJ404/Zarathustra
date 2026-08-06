@@ -52,6 +52,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     <button class="btn btn-outline" onclick="downloadReport()" id="btnReport" disabled>📊 Report</button>
     <a href="index.html" class="btn btn-outline" style="text-decoration:none;margin-left:auto;">ℹ About</a>
     <span style="font-size:11px;color:#888;margin-left:8px" id="apiIndicator"></span>
+    <span style="font-size:11px;color:#888;margin-left:8px" id="wasmIndicator"></span>
     <span class="badge" id="statusBadge">Ready</span>
   </div>
 
@@ -134,6 +135,17 @@ function addReport(action, code, privateInputs, publicInputs, ok, result) {
     } catch {
         el.textContent = '🔴 Backend unreachable';
     }
+    const wasmEl = document.getElementById('wasmIndicator');
+    wasmEl.textContent = '⏳ Loading WASM…';
+    try {
+        const mod = await import('./pkg/astra_frontend.js');
+        if (typeof mod.default === 'function') await mod.default();
+        if (typeof mod.compile !== 'function') throw new Error('no compile export');
+        window._astraWasm = mod;
+        wasmEl.textContent = '🟢 WASM native';
+    } catch {
+        wasmEl.textContent = '⚪ WASM unavailable (API fallback)';
+    }
 })();
 
 require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
@@ -188,6 +200,21 @@ async function compile() {
     const pub = getPublic();
     setStatus('Compiling...');
     document.getElementById('outputConsole').textContent = 'Compiling...\n';
+    if (window._astraWasm && typeof window._astraWasm.compile === 'function') {
+        try {
+            const out = window._astraWasm.compile(code);
+            document.getElementById('outputConsole').textContent = out;
+            setStatus('Compiled (WASM)', true);
+            addReport('COMPILE', code, priv, pub, true, out);
+            return;
+        } catch (err) {
+            const msg = '✗ WASM compile failed: ' + err.message;
+            document.getElementById('outputConsole').textContent = msg;
+            setStatus('Error', false);
+            addReport('COMPILE', code, priv, pub, false, msg);
+            return;
+        }
+    }
     try {
         const data = await apiPost('/api/compile', { code, private: priv, public: pub });
         const out = data.ok ? data.stdout : (data.error || data.stdout);

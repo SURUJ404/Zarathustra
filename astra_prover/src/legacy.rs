@@ -1,12 +1,17 @@
+//! Hand-rolled Groth16 — kept for reference/education only.
+//!
+//! Superseded by the ark-groth16 binding in [`crate::groth16`]. Types are
+//! prefixed `Legacy` so they don't clash with the ark re-exports.
+
 use bls12_381::{G1Affine, G1Projective, G2Affine, G2Projective, Scalar};
 use ff::Field;
-use group::{Curve, prime::PrimeCurveAffine};
+use group::{prime::PrimeCurveAffine, Curve};
 use rand::thread_rng;
 
-use crate::ir::ConstraintSystem;
+use astra_ir::types::ConstraintSystem;
 
 #[derive(Debug, Clone)]
-pub struct ProvingKey {
+pub struct LegacyProvingKey {
     pub alpha_g1: G1Affine,
     pub beta_g1: G1Affine,
     pub delta_g1: G1Affine,
@@ -28,7 +33,7 @@ pub struct ProvingKey {
 }
 
 #[derive(Debug, Clone)]
-pub struct VerifyingKey {
+pub struct LegacyVerifyingKey {
     pub alpha_g1: G1Affine,
     pub beta_g2: G2Affine,
     pub gamma_g2: G2Affine,
@@ -37,7 +42,7 @@ pub struct VerifyingKey {
 }
 
 #[derive(Debug, Clone)]
-pub struct Proof {
+pub struct LegacyProof {
     pub a: G1Affine,
     pub b: G2Affine,
     pub c: G1Affine,
@@ -50,7 +55,9 @@ fn lagrange(points: &[(Scalar, Scalar)]) -> Vec<Scalar> {
         let (xi, yi) = points[i];
         let mut basis = vec![Scalar::ONE];
         for j in 0..n {
-            if i == j { continue; }
+            if i == j {
+                continue;
+            }
             let xj = points[j].0;
             let d = (xi - xj).invert().unwrap_or(Scalar::ZERO);
             basis = poly_mul(&basis, &[-xj * d, d]);
@@ -61,12 +68,18 @@ fn lagrange(points: &[(Scalar, Scalar)]) -> Vec<Scalar> {
 }
 
 fn poly_mul(a: &[Scalar], b: &[Scalar]) -> Vec<Scalar> {
-    if a.is_empty() || b.is_empty() { return vec![Scalar::ZERO]; }
+    if a.is_empty() || b.is_empty() {
+        return vec![Scalar::ZERO];
+    }
     let mut r = vec![Scalar::ZERO; a.len() + b.len() - 1];
     for (i, ac) in a.iter().enumerate() {
-        if *ac == Scalar::ZERO { continue; }
+        if *ac == Scalar::ZERO {
+            continue;
+        }
         for (j, bc) in b.iter().enumerate() {
-            if *bc == Scalar::ZERO { continue; }
+            if *bc == Scalar::ZERO {
+                continue;
+            }
             r[i + j] += *ac * *bc;
         }
     }
@@ -76,16 +89,24 @@ fn poly_mul(a: &[Scalar], b: &[Scalar]) -> Vec<Scalar> {
 fn poly_add(a: &[Scalar], b: &[Scalar]) -> Vec<Scalar> {
     let m = a.len().max(b.len());
     let mut r = vec![Scalar::ZERO; m];
-    for (i, c) in a.iter().enumerate() { r[i] += c; }
-    for (i, c) in b.iter().enumerate() { r[i] += c; }
+    for (i, c) in a.iter().enumerate() {
+        r[i] += c;
+    }
+    for (i, c) in b.iter().enumerate() {
+        r[i] += c;
+    }
     r
 }
 
 fn poly_sub(a: &[Scalar], b: &[Scalar]) -> Vec<Scalar> {
     let m = a.len().max(b.len());
     let mut r = vec![Scalar::ZERO; m];
-    for (i, c) in a.iter().enumerate() { r[i] += c; }
-    for (i, c) in b.iter().enumerate() { r[i] -= c; }
+    for (i, c) in a.iter().enumerate() {
+        r[i] += c;
+    }
+    for (i, c) in b.iter().enumerate() {
+        r[i] -= c;
+    }
     r
 }
 
@@ -111,7 +132,9 @@ fn poly_trim(mut a: Vec<Scalar>) -> Vec<Scalar> {
 fn poly_div(a: &[Scalar], b: &[Scalar]) -> Vec<Scalar> {
     let mut a = a.to_vec();
     let b = poly_trim(b.to_vec());
-    if b.len() > a.len() { return vec![Scalar::ZERO]; }
+    if b.len() > a.len() {
+        return vec![Scalar::ZERO];
+    }
     let b_deg = b.len() - 1;
     let lead_inv = b[b_deg].invert().unwrap_or(Scalar::ZERO);
     let q_len = a.len() - b_deg;
@@ -131,7 +154,9 @@ fn poly_combine(coeffs_list: &[Vec<Scalar>], weights: &[Scalar]) -> Vec<Scalar> 
     let mut result = vec![Scalar::ZERO; max_deg];
     for (i, coeffs) in coeffs_list.iter().enumerate() {
         let w = weights.get(i).copied().unwrap_or(Scalar::ZERO);
-        if w == Scalar::ZERO { continue; }
+        if w == Scalar::ZERO {
+            continue;
+        }
         for (j, c) in coeffs.iter().enumerate() {
             result[j] += w * c;
         }
@@ -161,11 +186,13 @@ fn eval_g2(coeffs: &[Scalar], tau_powers: &[G2Affine]) -> G2Projective {
 
 fn scalar_pow(s: &Scalar, exp: usize) -> Scalar {
     let mut r = Scalar::ONE;
-    for _ in 0..exp { r *= s; }
+    for _ in 0..exp {
+        r *= s;
+    }
     r
 }
 
-pub fn setup(cs: &ConstraintSystem) -> (ProvingKey, VerifyingKey) {
+pub fn setup(cs: &ConstraintSystem) -> (LegacyProvingKey, LegacyVerifyingKey) {
     let mut rng = thread_rng();
     let l = cs.num_public;
     let m = cs.num_variables;
@@ -188,9 +215,21 @@ pub fn setup(cs: &ConstraintSystem) -> (ProvingKey, VerifyingKey) {
         let mut bp = Vec::new();
         let mut cp = Vec::new();
         for (j, p) in pts.iter().enumerate() {
-            let ac = cs.a[j].iter().find(|(vi, _)| *vi == var).map(|(_, c)| *c).unwrap_or(Scalar::ZERO);
-            let bc = cs.b[j].iter().find(|(vi, _)| *vi == var).map(|(_, c)| *c).unwrap_or(Scalar::ZERO);
-            let cc = cs.c[j].iter().find(|(vi, _)| *vi == var).map(|(_, c)| *c).unwrap_or(Scalar::ZERO);
+            let ac = cs.a[j]
+                .iter()
+                .find(|(vi, _)| *vi == var)
+                .map(|(_, c)| *c)
+                .unwrap_or(Scalar::ZERO);
+            let bc = cs.b[j]
+                .iter()
+                .find(|(vi, _)| *vi == var)
+                .map(|(_, c)| *c)
+                .unwrap_or(Scalar::ZERO);
+            let cc = cs.c[j]
+                .iter()
+                .find(|(vi, _)| *vi == var)
+                .map(|(_, c)| *c)
+                .unwrap_or(Scalar::ZERO);
             ap.push((*p, ac));
             bp.push((*p, bc));
             cp.push((*p, cc));
@@ -214,7 +253,9 @@ pub fn setup(cs: &ConstraintSystem) -> (ProvingKey, VerifyingKey) {
 
     let z_poly: Vec<Scalar> = {
         let mut zp = vec![Scalar::ONE];
-        for p in &pts { zp = poly_mul(&zp, &[-*p, Scalar::ONE]); }
+        for p in &pts {
+            zp = poly_mul(&zp, &[-*p, Scalar::ONE]);
+        }
         zp
     };
 
@@ -255,26 +296,39 @@ pub fn setup(cs: &ConstraintSystem) -> (ProvingKey, VerifyingKey) {
         })
         .collect();
 
-    let pk = ProvingKey {
-        alpha_g1, beta_g1, delta_g1,
-        beta_g2, delta_g2, gamma_g2,
-        tau_powers_g1, tau_powers_g2,
-        abc_public_g1: abc_public_g1.clone(), abc_private_g1,
+    let pk = LegacyProvingKey {
+        alpha_g1,
+        beta_g1,
+        delta_g1,
+        beta_g2,
+        delta_g2,
+        gamma_g2,
+        tau_powers_g1,
+        tau_powers_g2,
+        abc_public_g1: abc_public_g1.clone(),
+        abc_private_g1,
         h_crs_g1,
-        l, m, n,
-        u_coeffs: u_poly, v_coeffs: v_poly, w_coeffs: w_poly,
+        l,
+        m,
+        n,
+        u_coeffs: u_poly,
+        v_coeffs: v_poly,
+        w_coeffs: w_poly,
         z_coeffs: z_poly,
     };
 
-    let vk = VerifyingKey {
-        alpha_g1, beta_g2, gamma_g2, delta_g2,
+    let vk = LegacyVerifyingKey {
+        alpha_g1,
+        beta_g2,
+        gamma_g2,
+        delta_g2,
         ic: abc_public_g1,
     };
 
     (pk, vk)
 }
 
-pub fn prove(pk: &ProvingKey, cs: &ConstraintSystem) -> Proof {
+pub fn prove(pk: &LegacyProvingKey, cs: &ConstraintSystem) -> LegacyProof {
     let mut rng = thread_rng();
     let r = Scalar::random(&mut rng);
     let s = Scalar::random(&mut rng);
@@ -316,14 +370,14 @@ pub fn prove(pk: &ProvingKey, cs: &ConstraintSystem) -> Proof {
     let b_g1 = pk.beta_g1.to_curve() + v_g1 + pk.delta_g1.to_curve() * s;
     c = c + a.to_curve() * s + b_g1 * r - pk.delta_g1.to_curve() * (r * s);
 
-    Proof {
+    LegacyProof {
         a,
         b,
         c: c.to_affine(),
     }
 }
 
-pub fn verify(vk: &VerifyingKey, public_inputs: &[Scalar], proof: &Proof) -> bool {
+pub fn verify(vk: &LegacyVerifyingKey, public_inputs: &[Scalar], proof: &LegacyProof) -> bool {
     let mut ic = vk.ic[0].to_curve();
     for (i, input) in public_inputs.iter().enumerate() {
         if i + 1 < vk.ic.len() {

@@ -1,0 +1,12 @@
+[package]
+name = "astra_codegen"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Lowers Zara programs to R1CS and witnesses, and defines the proof-system Backend trait."
+
+[dependencies]
+astra_ir = { path = "../astra_ir" }
+astra_frontend = { path = "../astra_frontend" }
+bls12_381.workspace = true
+ff.workspace = true

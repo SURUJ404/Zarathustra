@@ -1,9 +1,9 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-pub mod patterns;
 pub mod analyzers;
+pub mod patterns;
 pub mod report;
-pub use report::{report_terminal, report_json, report_html};
+pub use report::{report_html, report_json, report_terminal};
 
 use std::time::Instant;
 
@@ -31,12 +31,21 @@ pub struct ScanResult {
     pub findings: Vec<Finding>,
 }
 
-fn walk_dir(dir: &std::path::Path, findings: &mut Vec<Finding>, files_scanned: &mut usize, verbose: bool) {
+fn walk_dir(
+    dir: &std::path::Path,
+    findings: &mut Vec<Finding>,
+    files_scanned: &mut usize,
+    verbose: bool,
+) {
     if let Ok(entries) = std::fs::read_dir(dir) {
         for entry in entries.flatten() {
             let p = entry.path();
             if p.is_dir() {
-                let name = p.file_name().unwrap_or_default().to_string_lossy().to_string();
+                let name = p
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string();
                 if name == "target" || name == ".git" || name == "node_modules" {
                     continue;
                 }
@@ -44,7 +53,9 @@ fn walk_dir(dir: &std::path::Path, findings: &mut Vec<Finding>, files_scanned: &
             } else if let Some(ext) = p.extension() {
                 let ext = ext.to_string_lossy().to_lowercase();
                 if ext == "zara" || ext == "rs" || ext == "sol" {
-                    if verbose { eprintln!("[{}] scanning...", p.display()); }
+                    if verbose {
+                        eprintln!("[{}] scanning...", p.display());
+                    }
                     *files_scanned += 1;
                     if let Ok(code) = std::fs::read_to_string(&p) {
                         let f = analyzers::analyze(&code, &ext, &p.to_string_lossy());
@@ -64,7 +75,12 @@ pub fn scan_path(path: &str, verbose: bool) -> ScanResult {
     let meta = std::fs::metadata(path);
     if let Ok(m) = meta {
         if m.is_dir() {
-            walk_dir(std::path::Path::new(path), &mut findings, &mut files_scanned, verbose);
+            walk_dir(
+                std::path::Path::new(path),
+                &mut findings,
+                &mut files_scanned,
+                verbose,
+            );
         } else {
             files_scanned = 1;
             if let Ok(code) = std::fs::read_to_string(path) {
@@ -93,7 +109,11 @@ pub fn scan_path(path: &str, verbose: bool) -> ScanResult {
     ScanResult {
         files_scanned,
         duration_ms: duration,
-        critical, high, medium, low, info,
+        critical,
+        high,
+        medium,
+        low,
+        info,
         findings,
     }
 }

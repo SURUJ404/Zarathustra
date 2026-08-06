@@ -1,0 +1,9 @@
+[package]
+name = "astra_stdlib"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Standard gadget library for the Zara circuit language. Versioned, dependency-free modules."
+
+[dependencies]
+astra_ir = { path = "../astra_ir" }

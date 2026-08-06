@@ -2,11 +2,15 @@ use bls12_381::Scalar;
 use ff::Field;
 use std::collections::HashMap;
 
-use crate::ir::*;
-use crate::parser;
+use astra_ir::ir::{BinaryOp, Expr, Program, Stmt};
+use astra_ir::types::ConstraintSystem;
 
-pub fn compile(source: &str, public: &[Scalar], private: &[Scalar]) -> Result<ConstraintSystem, String> {
-    let program = parser::parse(source).map_err(|e| e.msg)?;
+pub fn compile(
+    source: &str,
+    public: &[Scalar],
+    private: &[Scalar],
+) -> Result<ConstraintSystem, String> {
+    let program = astra_frontend::parse(source).map_err(|e| e.render())?;
     let mut comp = Compiler::new();
     comp.compile_program(&program, public, private)
 }
@@ -86,7 +90,10 @@ impl Compiler {
     }
 
     fn get_var(&self, name: &str) -> Result<usize, String> {
-        self.var_index.get(name).copied().ok_or_else(|| format!("unknown variable: {}", name))
+        self.var_index
+            .get(name)
+            .copied()
+            .ok_or_else(|| format!("unknown variable: {}", name))
     }
 
     fn compile_program(

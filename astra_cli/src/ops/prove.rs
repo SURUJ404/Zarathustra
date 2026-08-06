@@ -1,4 +1,6 @@
-use astra_core::{compile, setup, prove, verify, validate_constraints, scalar_from_dec_str, scalar_display};
+use astra_codegen::{compile, validate_constraints};
+use astra_ir::types::{scalar_display, scalar_from_dec_str, ConstraintSystem};
+use astra_prover::legacy::{prove, setup, verify};
 use bls12_381::Scalar;
 use ff::Field;
 
@@ -24,7 +26,7 @@ fn read_source(m: &clap::ArgMatches) -> Result<String, String> {
     std::fs::read_to_string(path).map_err(|e| format!("cannot read {}: {}", path, e))
 }
 
-fn show_cs(cs: &astra_core::ConstraintSystem) {
+fn show_cs(cs: &ConstraintSystem) {
     println!("=== Circuit ===");
     println!("  Variables:   {}", cs.num_variables);
     println!("  Public:      {}", cs.num_public);
@@ -38,31 +40,47 @@ fn show_cs(cs: &astra_core::ConstraintSystem) {
     }
 }
 
-
-
 fn run_compile(m: &clap::ArgMatches) {
-    let source = read_source(m).unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(1); });
+    let source = read_source(m).unwrap_or_else(|e| {
+        eprintln!("{}", e);
+        std::process::exit(1);
+    });
     let public = parse_inputs(m.value_of("public").unwrap_or(""));
     let private = parse_inputs(m.value_of("private").unwrap_or(""));
-    let cs = compile(&source, &public, &private).unwrap_or_else(|e| { eprintln!("Error: {}", e); std::process::exit(1); });
+    let cs = compile(&source, &public, &private).unwrap_or_else(|e| {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    });
     show_cs(&cs);
 }
 
 fn run_setup(m: &clap::ArgMatches) {
-    let source = read_source(m).unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(1); });
+    let source = read_source(m).unwrap_or_else(|e| {
+        eprintln!("{}", e);
+        std::process::exit(1);
+    });
     let public = parse_inputs(m.value_of("public").unwrap_or(""));
     let private = parse_inputs(m.value_of("private").unwrap_or(""));
-    let cs = compile(&source, &public, &private).unwrap_or_else(|e| { eprintln!("Error: {}", e); std::process::exit(1); });
+    let cs = compile(&source, &public, &private).unwrap_or_else(|e| {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    });
     let (_pk, _vk) = setup(&cs);
     println!("=== Trusted Setup Complete ===");
     println!("  CRS generated for {} constraints", cs.num_constraints);
 }
 
 fn run_prove(m: &clap::ArgMatches) {
-    let source = read_source(m).unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(1); });
+    let source = read_source(m).unwrap_or_else(|e| {
+        eprintln!("{}", e);
+        std::process::exit(1);
+    });
     let public = parse_inputs(m.value_of("public").unwrap_or(""));
     let private = parse_inputs(m.value_of("private").unwrap_or(""));
-    let cs = compile(&source, &public, &private).unwrap_or_else(|e| { eprintln!("Error: {}", e); std::process::exit(1); });
+    let cs = compile(&source, &public, &private).unwrap_or_else(|e| {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    });
     if let Err(e) = validate_constraints(&cs) {
         eprintln!("Error: {} — cannot generate proof", e);
         std::process::exit(1);
@@ -88,10 +106,16 @@ fn run_prove(m: &clap::ArgMatches) {
 }
 
 fn run_verify(m: &clap::ArgMatches) {
-    let source = read_source(m).unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(1); });
+    let source = read_source(m).unwrap_or_else(|e| {
+        eprintln!("{}", e);
+        std::process::exit(1);
+    });
     let public = parse_inputs(m.value_of("public").unwrap_or(""));
     let private = parse_inputs(m.value_of("private").unwrap_or(""));
-    let cs = compile(&source, &public, &private).unwrap_or_else(|e| { eprintln!("Error: {}", e); std::process::exit(1); });
+    let cs = compile(&source, &public, &private).unwrap_or_else(|e| {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    });
     if let Err(e) = validate_constraints(&cs) {
         eprintln!("Error: {} — cannot verify", e);
         std::process::exit(1);

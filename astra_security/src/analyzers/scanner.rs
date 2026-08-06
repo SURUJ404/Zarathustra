@@ -1,4 +1,6 @@
-use crate::patterns::{circuit_vulnerability_patterns, solidity_vulnerability_patterns, PatternType};
+use crate::patterns::{
+    circuit_vulnerability_patterns, solidity_vulnerability_patterns, PatternType,
+};
 use crate::Finding;
 use regex::Regex;
 
@@ -11,25 +13,33 @@ pub fn analyze(code: &str, ext: &str, file: &str) -> Vec<Finding> {
     }
 }
 
-fn run_semantic_checks(code: &str, patterns: &[crate::patterns::VulnerabilityPattern], file: &str, is_solidity: bool) -> Vec<Finding> {
+fn run_semantic_checks(
+    code: &str,
+    patterns: &[crate::patterns::VulnerabilityPattern],
+    file: &str,
+    is_solidity: bool,
+) -> Vec<Finding> {
     let mut findings = Vec::new();
     let lines: Vec<&str> = code.lines().collect();
 
-    let has_assert = code.contains("assert") || code.contains("===") || code.contains("==") || (is_solidity && code.contains("require"));
+    let has_assert = code.contains("assert")
+        || code.contains("===")
+        || code.contains("==")
+        || (is_solidity && code.contains("require"));
     let has_nonce = code.contains("nonce") || code.contains("nullifier");
     let has_verify = code.contains("verifyProof") || code.contains("verifyTx");
     let has_field = code.contains("field");
-    let has_range_type = code.contains("u8") || code.contains("u16") || code.contains("u32") || code.contains("u64");
+    let has_range_type =
+        code.contains("u8") || code.contains("u16") || code.contains("u32") || code.contains("u64");
     let _public_inputs: Vec<&str> = if !is_solidity {
         code.lines()
             .filter(|l| l.contains("field") && (l.contains("private")))
             .flat_map(|l| {
-                let parts: Vec<&str> = l.split(|c| c == ',' || c == '(' || c == ')' || c == ':').collect();
-                parts.into_iter()
+                let parts: Vec<&str> = l.split([',', '(', ')', ':']).collect();
+                parts
+                    .into_iter()
                     .filter(|p| p.trim().starts_with("field") && p.contains("private"))
-                    .map(|p| {
-                        p.trim().split_whitespace().last().unwrap_or("")
-                    })
+                    .map(|p| p.split_whitespace().last().unwrap_or(""))
                     .collect::<Vec<&str>>()
             })
             .collect()
@@ -57,39 +67,33 @@ fn run_semantic_checks(code: &str, patterns: &[crate::patterns::VulnerabilityPat
                     }
                 }
             }
-            PatternType::Semantic => {
-                match pattern.id {
-                    "CIR-002" => {
-                        if has_field && has_assert && !has_range_type {
-                            findings.push(Finding {
-                                severity: pattern.severity.to_string(),
-                                category: pattern.category.to_string(),
-                                title: pattern.title.to_string(),
-                                file: file.to_string(),
-                                line: None,
-                                description: pattern.description.to_string(),
-                                snippet: "field type used".to_string(),
-                                fix: pattern.fix.to_string(),
-                            });
-                        }
-                    }
-                    "SOL-003" => {
-                        if has_verify && !has_nonce {
-                            findings.push(Finding {
-                                severity: pattern.severity.to_string(),
-                                category: pattern.category.to_string(),
-                                title: pattern.title.to_string(),
-                                file: file.to_string(),
-                                line: None,
-                                description: pattern.description.to_string(),
-                                snippet: "verifyProof found without nonce/nullifier".to_string(),
-                                fix: pattern.fix.to_string(),
-                            });
-                        }
-                    }
-                    _ => {}
+            PatternType::Semantic => match pattern.id {
+                "CIR-002" if has_field && has_assert && !has_range_type => {
+                    findings.push(Finding {
+                        severity: pattern.severity.to_string(),
+                        category: pattern.category.to_string(),
+                        title: pattern.title.to_string(),
+                        file: file.to_string(),
+                        line: None,
+                        description: pattern.description.to_string(),
+                        snippet: "field type used".to_string(),
+                        fix: pattern.fix.to_string(),
+                    });
                 }
-            }
+                "SOL-003" if has_verify && !has_nonce => {
+                    findings.push(Finding {
+                        severity: pattern.severity.to_string(),
+                        category: pattern.category.to_string(),
+                        title: pattern.title.to_string(),
+                        file: file.to_string(),
+                        line: None,
+                        description: pattern.description.to_string(),
+                        snippet: "verifyProof found without nonce/nullifier".to_string(),
+                        fix: pattern.fix.to_string(),
+                    });
+                }
+                _ => {}
+            },
             PatternType::KeywordMatch(kws) => {
                 for kw in kws {
                     for (lineno, line) in lines.iter().enumerate() {
@@ -139,6 +143,10 @@ fn analyze_circuit(code: &str, file: &str) -> Vec<Finding> {
         }
     }
 
+    if let Ok(program) = astra_frontend::parse(code) {
+        findings.extend(super::signal_flow::check(&program, file));
+    }
+
     findings
 }
 
@@ -170,5 +178,6 @@ fn analyze_solidity(code: &str, file: &str) -> Vec<Finding> {
 
     let mut all = findings;
     all.extend(re_findings);
+    all.extend(super::cei::check_solidity(code, file));
     all
 }

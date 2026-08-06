@@ -1,0 +1,21 @@
+[package]
+name = "astra_frontend"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Frontend for the Zara circuit language: lexer/parser, structured errors, LSP hook and WASM bindings."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+astra_ir = { path = "../astra_ir" }
+bls12_381.workspace = true
+
+[features]
+default = []
+wasm = ["dep:wasm-bindgen"]
+
+[dependencies.wasm-bindgen]
+version = "0.2"
+optional = true

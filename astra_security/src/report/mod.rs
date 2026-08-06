@@ -7,11 +7,21 @@ pub fn report_terminal(result: &ScanResult) {
     println!("Scan duration: {:.2}ms", result.duration_ms);
     println!();
     println!("Findings by severity:");
-    if result.critical > 0 { println!("  CRITICAL: {}", result.critical); }
-    if result.high > 0 { println!("  HIGH:     {}", result.high); }
-    if result.medium > 0 { println!("  MEDIUM:   {}", result.medium); }
-    if result.low > 0 { println!("  LOW:      {}", result.low); }
-    if result.info > 0 { println!("  INFO:     {}", result.info); }
+    if result.critical > 0 {
+        println!("  CRITICAL: {}", result.critical);
+    }
+    if result.high > 0 {
+        println!("  HIGH:     {}", result.high);
+    }
+    if result.medium > 0 {
+        println!("  MEDIUM:   {}", result.medium);
+    }
+    if result.low > 0 {
+        println!("  LOW:      {}", result.low);
+    }
+    if result.info > 0 {
+        println!("  INFO:     {}", result.info);
+    }
     println!("  Total:    {}", result.findings.len());
     println!();
 
@@ -80,7 +90,10 @@ h1 {{ color: #333; }}
     if result.info > 0 {
         html.push_str(&format!("<li>INFO: {}</li>", result.info));
     }
-    html.push_str(&format!("<li>Total: {}</li></ul></div>", result.findings.len()));
+    html.push_str(&format!(
+        "<li>Total: {}</li></ul></div>",
+        result.findings.len()
+    ));
 
     for f in &result.findings {
         let cls = f.severity.to_lowercase();
@@ -97,8 +110,17 @@ h1 {{ color: #333; }}
 <pre><code>{}</code></pre>
 <p><strong>Fix:</strong> {}</p>
 </div>"#,
-            cls, f.title, f.severity, f.severity, f.category, line_info,
-            f.file, line_info, f.description, f.snippet, f.fix
+            cls,
+            f.title,
+            f.severity,
+            f.severity,
+            f.category,
+            line_info,
+            f.file,
+            line_info,
+            f.description,
+            f.snippet,
+            f.fix
         ));
     }
 
