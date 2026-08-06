@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Astra — Zero-Knowledge Proofs, Simplified</title>
+<title>Zarathustra — Documentation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -26,8 +26,7 @@ body {
     font-family: 'Inter', -apple-system, sans-serif;
     background: var(--bg);
     color: var(--text);
-    line-height: 1.6;
-    overflow-x: hidden;
+    line-height: 1.65;
 }
 nav {
     display: flex;
@@ -37,7 +36,7 @@ nav {
     background: rgba(10,10,15,0.9);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
-    position: fixed;
+    position: sticky;
     top: 0; left: 0; right: 0;
     z-index: 100;
 }
@@ -45,463 +44,255 @@ nav {
 .logo span { color: var(--accent); }
 .nav-links { display: flex; gap: 24px; align-items: center; }
 .nav-links a { color: var(--text2); text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; }
-.nav-links a:hover { color: var(--text); }
+.nav-links a:hover, .nav-links a.active { color: var(--text); }
 .btn-nav { background: var(--gradient); color: #0a0a0f !important; padding: 8px 20px; border-radius: 8px; font-weight: 700 !important; }
 .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    padding: 80px 24px 40px;
     text-align: center;
-    padding: 120px 24px 80px;
-    background:
-        radial-gradient(ellipse 600px 400px at 50% -20%, rgba(212,168,75,0.08), transparent),
-        radial-gradient(ellipse 400px 400px at 20% 80%, rgba(212,168,75,0.04), transparent),
-        var(--bg);
-}
-.hero-badge {
-    display: inline-block;
-    padding: 6px 16px;
-    border-radius: 100px;
-    background: rgba(212,168,75,0.1);
-    border: 1px solid rgba(212,168,75,0.2);
-    color: var(--accent);
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 24px;
-}
-.hero h1 {
-    font-size: clamp(48px, 8vw, 88px);
-    font-weight: 800;
-    letter-spacing: -2px;
-    line-height: 1;
-    margin-bottom: 20px;
-    background: linear-gradient(135deg, #fff 0%, var(--accent) 50%, #fff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-.hero p {
-    font-size: 18px;
-    color: var(--text2);
-    max-width: 640px;
-    margin-bottom: 40px;
-    line-height: 1.7;
-}
-.hero-btns { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
-.btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 32px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 700;
-    text-decoration: none;
-    transition: all 0.2s;
-    cursor: pointer;
-    border: none;
-}
-.btn-primary { background: var(--gradient); color: #0a0a0f; }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(212,168,75,0.3); }
-.btn-secondary {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border);
-    padding: 14px 32px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: 0.2s;
-}
-.btn-secondary:hover { border-color: var(--text2); background: var(--bg2); }
-section { padding: 100px 24px; }
-.section-header {
-    text-align: center;
-    max-width: 700px;
-    margin: 0 auto 60px;
-}
-.section-header h2 {
-    font-size: 36px;
-    font-weight: 700;
-    margin-bottom: 12px;
-    letter-spacing: -1px;
-}
-.section-header h2 span { color: var(--accent); }
-.section-header p { color: var(--text2); font-size: 16px; }
-.contrast-section { background: var(--bg2); }
-.contrast-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2px;
-    max-width: 900px;
-    margin: 0 auto;
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-}
-.contrast-header {
-    padding: 20px;
-    font-weight: 700;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    text-align: center;
-}
-.contrast-header.traditional { background: rgba(248,113,113,0.1); color: var(--error); }
-.contrast-header.astra { background: rgba(212,168,75,0.1); color: var(--accent); }
-.contrast-cell {
-    padding: 20px;
-    font-size: 14px;
-    background: var(--bg3);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.contrast-cell .icon { font-size: 18px; flex-shrink: 0; }
-.contrast-cell.red { color: var(--error); }
-.contrast-cell.gold { color: var(--accent); }
-.flow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    max-width: 900px;
-    margin: 40px auto;
-}
-.flow-step {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 24px;
-    text-align: center;
-    min-width: 120px;
-    transition: 0.2s;
-}
-.flow-step:hover { border-color: var(--accent-dim); }
-.flow-step .num {
-    display: inline-flex;
-    width: 28px; height: 28px;
-    align-items: center; justify-content: center;
-    border-radius: 50%;
-    background: var(--gradient);
-    color: #0a0a0f;
-    font-weight: 800;
-    font-size: 13px;
-    margin-bottom: 8px;
-}
-.flow-step .label { font-size: 13px; font-weight: 600; }
-.flow-step .desc { font-size: 11px; color: var(--text2); margin-top: 4px; }
-.flow-arrow { color: var(--accent-dim); font-size: 24px; font-weight: 300; }
-.demo-section {
-    background:
-        radial-gradient(ellipse 500px 300px at 30% 50%, rgba(212,168,75,0.03), transparent),
-        var(--bg);
-}
-.code-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    max-width: 1000px;
-    margin: 0 auto;
-}
-.code-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-}
-.code-card .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: var(--bg3);
+    background: radial-gradient(ellipse 600px 400px at 50% -20%, rgba(212,168,75,0.08), transparent), var(--bg);
     border-bottom: 1px solid var(--border);
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text2);
 }
-.code-card .card-header .lang { color: var(--accent); }
-.code-card pre {
-    padding: 20px;
+.hero h1 { font-size: 42px; font-weight: 800; letter-spacing: -1px; }
+.hero h1 span { color: var(--accent); }
+.hero p { color: var(--text2); font-size: 16px; max-width: 680px; margin: 14px auto 0; }
+.layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 40px;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+}
+.sidebar { position: sticky; top: 84px; align-self: start; }
+.sidebar h4 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text2); margin: 20px 0 8px; font-weight: 600;
+}
+.sidebar h4:first-child { margin-top: 0; }
+.sidebar a {
+    display: block; color: var(--text2); text-decoration: none;
+    font-size: 13px; padding: 5px 0; transition: 0.15s;
+}
+.sidebar a:hover { color: var(--text); }
+.sidebar a.active { color: var(--accent); }
+.content { min-width: 0; }
+.content h2 {
+    font-size: 28px; font-weight: 700; margin: 40px 0 12px; letter-spacing: -0.5px;
+    padding-top: 20px;
+}
+.content h2:first-child { margin-top: 0; padding-top: 0; }
+.content h2 .anchor { color: var(--accent); }
+.content h3 { font-size: 18px; font-weight: 600; margin: 28px 0 8px; }
+.content p { color: var(--text); font-size: 15px; margin-bottom: 12px; }
+.content ul, .content ol { padding-left: 22px; margin-bottom: 12px; }
+.content li { font-size: 15px; color: var(--text); margin-bottom: 6px; }
+.content strong { color: var(--text); }
+code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--accent);
+}
+pre {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
     line-height: 1.7;
     overflow-x: auto;
+    margin-bottom: 16px;
     color: #e0e0e0;
 }
-.code-card pre .kw { color: #c792ea; }
-.code-card pre .fn { color: #82aaff; }
-.code-card pre .ty { color: #ffcb6b; }
-.code-card pre .cm { color: #546e7a; font-style: italic; }
-.code-card pre .str { color: #c3e88d; }
-.code-card pre .num { color: #f78c6c; }
-.output-card .card-header { color: var(--success); }
-.output-card pre { color: var(--text2); }
-.output-card pre .ok { color: var(--success); }
-.cli-demo {
-    max-width: 700px;
-    margin: 40px auto;
-    background: #0d0d14;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-}
-.cli-demo .cli-header {
-    display: flex;
-    gap: 8px;
+pre .prompt { color: var(--accent); }
+pre .comment { color: #546e7a; font-style: italic; }
+pre .ok { color: var(--success); }
+pre .kw { color: #c792ea; }
+pre .fn { color: #82aaff; }
+pre .ty { color: #ffcb6b; }
+.note {
+    background: rgba(212,168,75,0.08);
+    border: 1px solid rgba(212,168,75,0.2);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
     padding: 12px 16px;
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 16px;
+}
+.note code { background: rgba(212,168,75,0.15); }
+.callout {
     background: var(--bg3);
-    border-bottom: 1px solid var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    margin-bottom: 16px;
 }
-.cli-demo .dot { width: 10px; height: 10px; border-radius: 50%; }
-.cli-demo .dot.r { background: #ff5f57; }
-.cli-demo .dot.y { background: #ffbd2e; }
-.cli-demo .dot.g { background: #28c840; }
-.cli-demo .cli-title { font-size: 11px; color: var(--text2); margin-left: 8px; }
-.cli-demo pre {
-    padding: 20px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    line-height: 1.8;
-}
-.cli-demo pre .prompt { color: var(--accent); }
-.cli-demo pre .output { color: var(--text2); }
-.cli-demo pre .ok { color: var(--success); }
-.features-grid {
+.callout code { background: var(--bg2); }
+.card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-    max-width: 1000px;
-    margin: 0 auto;
+    gap: 16px;
+    margin: 20px 0;
 }
-.feature-card {
+.docs-card {
     background: var(--bg2);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
+    border-radius: 12px;
+    padding: 20px;
+    text-decoration: none;
+    display: block;
     transition: 0.2s;
 }
-.feature-card:hover { border-color: var(--accent-dim); transform: translateY(-2px); }
-.feature-card .icon { font-size: 32px; margin-bottom: 12px; }
-.feature-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-.feature-card p { font-size: 13px; color: var(--text2); line-height: 1.6; }
-.cta-section {
-    text-align: center;
-    background: var(--bg2);
-    border-top: 1px solid var(--border);
-}
-.cta-section h2 { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
-.cta-section h2 span { color: var(--accent); }
-.cta-section p { color: var(--text2); font-size: 16px; max-width: 600px; margin: 0 auto 32px; }
-footer {
-    text-align: center;
-    padding: 40px 24px;
-    border-top: 1px solid var(--border);
-    color: var(--text2);
-    font-size: 13px;
-}
-footer a { color: var(--accent); text-decoration: none; }
-@media (max-width: 768px) {
+.docs-card:hover { border-color: var(--accent-dim); transform: translateY(-2px); }
+.docs-card h3 { font-size: 15px; margin: 0 0 6px; color: var(--text); }
+.docs-card p { font-size: 13px; color: var(--text2); margin: 0; }
+.toc-card { margin-bottom: 28px; }
+@media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
     nav { padding: 12px 20px; }
     .nav-links a:not(.btn-nav) { display: none; }
-    .contrast-grid { grid-template-columns: 1fr; }
-    .code-grid { grid-template-columns: 1fr; }
-    .flow { flex-direction: column; }
-    .flow-arrow { transform: rotate(90deg); }
 }
 </style>
 </head>
 <body>
 
 <nav>
-    <div class="logo">✦ <span>Astra</span></div>
+    <div class="logo">✦ <span>Zarathustra</span></div>
     <div class="nav-links">
-        <a href="#contrast">Why</a>
-        <a href="#demo">Demo</a>
-        <a href="docs.html">Docs</a>
-        <a href="#features">Features</a>
+        <a href="index.html" class="active">Docs</a>
+        <a href="docs.html">CLI Reference</a>
         <a href="playground.html" class="btn-nav">Playground →</a>
     </div>
 </nav>
 
 <section class="hero">
-    <div class="hero-badge">⚡ Zero-Knowledge Proof Toolkit</div>
-    <h1>Write Code.<br>Prove Anything.</h1>
-    <p>Zara is a high-level circuit DSL that compiles to zkSNARKs — write imperative, Python-like code, generate real Groth16 proofs, and verify them honestly.</p>
-    <div class="hero-btns">
-        <a href="playground.html" class="btn-primary">▶ Try the Playground</a>
-        <a href="#demo" class="btn-secondary">See How It Works ↓</a>
-    </div>
+    <h1>Zarathustra <span>Documentation</span></h1>
+    <p>Zarathustra (project) ships <strong>Astra</strong>, a Rust zkSNARK toolkit, and <strong>Zara</strong>, a high-level circuit language. Generate and honestly verify Groth16 zero-knowledge proofs, run static security analysis, and publish proving artifacts.</p>
 </section>
 
-<section class="contrast-section" id="contrast">
-    <div class="section-header">
-        <h2>Traditional zkSNARKs <span>vs</span> Astra</h2>
-        <p>Building zero-knowledge proofs the old way vs a developer-friendly approach.</p>
+<div class="layout">
+<aside class="sidebar">
+    <h4>Guides</h4>
+    <a href="#overview" class="active">Overview</a>
+    <a href="#what-ships">What's Included</a>
+    <a href="#quick-start">Quick Start</a>
+    <a href="#zara-language">The Zara Language</a>
+    <h4>How to use</h4>
+    <a href="#pipeline">Proof Pipeline</a>
+    <a href="#verify">Verifying honestly</a>
+    <a href="#audit">Security Audit</a>
+    <a href="#publish">Publishing</a>
+    <h4>Reference</h4>
+    <a href="docs.html">CLI Reference →</a>
+</aside>
+
+<main class="content">
+
+    <h2 id="overview">Overview <span class="anchor">#</span></h2>
+    <p>Zarathustra is a zero-knowledge proof toolkit written in Rust. Its goal is broad feature parity with — and eventually to overtake — <a href="https://github.com/Zokrates/ZoKrates" style="color: var(--accent);">ZoKrates</a>. You write circuits in the <strong>Zara</strong> language; the toolchain compiles them to a constraint system (R1CS), performs a trusted setup, generates a Groth16 proof, and verifies it honestly.</p>
+    <p>Everything is honest-by-default: the verifier loads your real keys and proof files and checks the public inputs bound into the proof. Nothing is stubbed or assumed.</p>
+
+    <h2 id="what-ships">What's Included <span class="anchor">#</span></h2>
+    <div class="card-grid">
+        <a class="docs-card" href="#zara-language">
+            <h3>Zara language</h3>
+            <p>Imperative, typed, assert-based circuit DSL with span-aware diagnostics.</p>
+        </a>
+        <a class="docs-card" href="docs.html">
+            <h3>astra CLI</h3>
+            <p>prove, audit, deploy, publish — the whole toolkit at one command.</p>
+        </a>
+        <a class="docs-card" href="#audit">
+            <h3>Security scanner</h3>
+            <p>Static analyzers for circuits and Solidity verifiers with a CI gate.</p>
+        </a>
+        <a class="docs-card" href="#publish">
+            <h3>Publishing</h3>
+            <p>Export JSON test vectors and target verifier platforms honestly.</p>
+        </a>
     </div>
-    <div class="contrast-grid">
-        <div class="contrast-header traditional">❌ Traditional Approach</div>
-        <div class="contrast-header astra">✅ Astra</div>
+    <p>The Rust workspace is split into focused crates: <code>astra_ir</code> (IR), <code>astra_frontend</code> (parser/LSP/WASM), <code>astra_codegen</code> (lowering), <code>astra_prover</code> (proof backends), <code>astra_stdlib</code> (gadgets), <code>astra_publish</code> (verifier export), <code>astra_security</code> (analyzers), and <code>astra_cli</code> (the binary).</p>
 
-        <div class="contrast-cell red"><span class="icon">⚠️</span> Write R1CS constraints manually</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> Imperative, typed, assert-based Zara DSL</div>
-
-        <div class="contrast-cell red"><span class="icon">⚠️</span> Expert-level cryptography knowledge required</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> No crypto PhD needed — just write logic</div>
-
-        <div class="contrast-cell red"><span class="icon">⚠️</span> Wire up provers and verifiers from scratch</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> One pipeline: compile → setup → prove → verify</div>
-
-        <div class="contrast-cell red"><span class="icon">⚠️</span> Trust fake tooling that skips verification</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> Honest by default: verify reads real keys + proof</div>
-    </div>
-</section>
-
-<section class="demo-section" id="demo">
-    <div class="section-header">
-        <h2>See It <span>In Action</span></h2>
-        <p>Prove that you know x, y such that x + y == sum — without revealing x and y.</p>
-    </div>
-
-    <div class="code-grid">
-        <div class="code-card">
-            <div class="card-header"><span>📄 sum.zara</span><span class="lang">zara</span></div>
-            <pre>
-<span class="cm">// Prove you know x, y such that x + y == sum</span>
-<span class="kw">def</span> <span class="fn">main</span>(<span class="ty">field</span> <span class="kw">public</span> sum,
-         <span class="ty">field</span> <span class="kw">private</span> x,
-         <span class="ty">field</span> <span class="kw">private</span> y) -&gt; <span class="ty">field</span> {
-    <span class="kw">assert</span>(x + y == sum);
-    <span class="kw">return</span> <span class="num">1</span>;
-}</pre>
-        </div>
-        <div class="code-card output-card">
-            <div class="card-header"><span>🔍 Pipeline Result</span><span class="lang">ark-groth16</span></div>
-            <pre>
-<span class="ok">=== Circuit ===</span>
-  Variables:   4   Constraints: 1
-
-<span class="ok">=== Trusted Setup Complete ===</span>
-  Wrote pk.json, vk.json
-
-<span class="ok">=== Proof Generated ===</span>
-  Curve:  bls12-381
-  Saved to proof.json
-
-<span class="ok">✓ PROOF VERIFIED</span></pre>
-        </div>
-    </div>
-
-    <div class="cli-demo">
-        <div class="cli-header">
-            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-            <span class="cli-title">terminal — full pipeline</span>
-        </div>
-        <pre>
+    <h2 id="quick-start">Quick Start <span class="anchor">#</span></h2>
+    <p>Build the workspace and run the full pipeline on the example circuit:</p>
+    <pre><span class="prompt">$</span> cargo build --workspace
 <span class="prompt">$</span> astra prove compile -p 8 -r 3,5 examples/sum.zara
-<span class="output">=== Circuit ===
-  Variables:   4  Constraints: 1</span>
+<span class="prompt">$</span> astra prove setup   -p 8 -r 3,5 examples/sum.zara
+<span class="prompt">$</span> astra prove prove   -p 8 -r 3,5 examples/sum.zara
+<span class="prompt">$</span> astra prove verify  -p 8 -r 3,5 examples/sum.zara
+<span class="ok">✓ PROOF VERIFIED</span></pre>
 
-<span class="prompt">$</span> astra prove setup -p 8 -r 3,5 examples/sum.zara
-<span class="output">=== Trusted Setup Complete ===
-  Wrote pk.json, vk.json</span>
+    <h2 id="zara-language">The Zara Language <span class="anchor">#</span></h2>
+    <p>Zara is a small, readable language for expressing circuit constraints. Functions take <code>field</code> parameters and return values; you assert relationships that must hold.</p>
+    <pre><span class="cm" style="color:#546e7a;font-style:italic;">// Prove you know x, y such that x + y == sum</span>
+<span class="kw">def</span> <span class="fn">main</span>(<span class="ty">field</span> public sum, <span class="ty">field</span> private x, <span class="ty">field</span> private y) -&gt; <span class="ty">field</span> {
+    <span class="kw">assert</span>(x + y == sum);
+    <span class="kw">return</span> <span class="num" style="color:#f78c6c;">1</span>;
+}</pre>
+    <p>Key points:</p>
+    <ul>
+        <li><strong>Types:</strong> the only primitive type today is <code>field</code>.</li>
+        <li><strong>Public / private:</strong> mark inputs as <code>public</code> (revealed) or <code>private</code> (hidden in the proof).</li>
+        <li><strong>assert:</strong> the constraint <code>x + y == sum</code> is what the prover must satisfy.</li>
+        <li><strong>Diagnostics:</strong> parse and compile errors carry source spans.</li>
+    </ul>
 
-<span class="prompt">$</span> astra prove prove -p 8 -r 3,5 examples/sum.zara
-<span class="output">=== Proof Generated ===
-  Saved to proof.json</span>
+    <h2 id="pipeline">Proof Pipeline <span class="anchor">#</span></h2>
+    <p>All pipeline commands operate on a <code>.zara</code> source file and write artifacts into the <strong>current working directory</strong>.</p>
 
-<span class="prompt">$</span> astra prove verify -p 8 -r 3,5 examples/sum.zara
-<span class="output"><span class="ok">✓ PROOF VERIFIED</span></span></pre>
-    </div>
+    <h3>compile — circuit + witness</h3>
+    <p>Parses the source, lowers it to R1CS, evaluates the witness, and prints the circuit summary.</p>
+    <pre><span class="prompt">$</span> astra prove compile -p 8 -r 3,5 examples/sum.zara</pre>
 
-    <div class="section-header" style="margin-top: 60px;">
-        <h2>How It <span>Works</span></h2>
-        <p>The compiler pipeline — from source code to verified proof.</p>
-    </div>
-    <div class="flow">
-        <div class="flow-step"><div class="num">1</div><div class="label">Write Code</div><div class="desc">Zara DSL</div></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">2</div><div class="label">Compile</div><div class="desc">R1CS + witness</div></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">3</div><div class="label">Setup</div><div class="desc">pk.json + vk.json</div></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">4</div><div class="label">Prove</div><div class="desc">proof.json</div></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">5</div><div class="label">Verify</div><div class="desc">honest check</div></div>
-    </div>
-</section>
+    <h3>setup — generate keys</h3>
+    <p>Runs the trusted setup (CRS) and writes <code>pk.json</code> (proving key) and <code>vk.json</code> (verifying key). Defaults to <code>ark-groth16</code> over BLS12-381.</p>
+    <pre><span class="prompt">$</span> astra prove setup -p 8 -r 3,5 --backend ark-groth16 examples/sum.zara
+<span class="output">  Wrote pk.json, vk.json</span></pre>
 
-<section id="features">
-    <div class="section-header">
-        <h2>Everything You <span>Need</span></h2>
-        <p>What the toolkit actually ships today.</p>
-    </div>
-    <div class="features-grid">
-        <div class="feature-card">
-            <div class="icon">📝</div>
-            <h3>Zara DSL</h3>
-            <p>Imperative, typed, assert-based circuit language with span-aware diagnostics and an LSP hook.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">🔐</div>
-            <h3>Honest Groth16</h3>
-            <p>Real ark-groth16 proving over BLS12-381. verify() loads vk.json + proof.json and checks the bound public inputs — tampering is rejected.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">🧩</div>
-            <h3>Backend Registry</h3>
-            <p>Plugin-style backends behind one trait: ark-groth16 (default) and a hand-rolled legacy reference implementation.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">📚</div>
-            <h3>Standard Library</h3>
-            <p>Versioned gadgets including Poseidon hashing and Merkle trees with inclusion proofs.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">🛡️</div>
-            <h3>Security Scanner</h3>
-            <p>Static analyzers: signal-flow analysis for unconstrained public inputs plus CEI/reentrancy checks for Solidity.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">📤</div>
-            <h3>Verifier Publishing</h3>
-            <p>JSON test vectors from real artifacts today; EVM export that honestly refuses non-BN254 curves rather than emitting a fake contract.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">🌐</div>
-            <h3>Web IDE + CLI</h3>
-            <p>Browser-based Monaco playground backed by the same engine, or the astra CLI in your terminal.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">⚡</div>
-            <h3>Rust Native</h3>
-            <p>Blazing fast compilation and proving powered by Rust with the arkworks cryptography stack.</p>
-        </div>
-    </div>
-</section>
+    <h3>prove — generate a proof</h3>
+    <p>Builds the Groth16 proof and writes <code>proof.json</code>, binding the public inputs into it.</p>
+    <pre><span class="prompt">$</span> astra prove prove -p 8 -r 3,5 examples/sum.zara
+<span class="output">  Saved to proof.json</span></pre>
 
-<section class="cta-section">
-    <h2>Ready to Build? <span>Try It Now</span></h2>
-    <p>Use the browser-based playground or install the CLI and prove something in minutes.</p>
-    <div class="hero-btns">
-        <a href="playground.html" class="btn-primary">▶ Launch Playground</a>
-        <a href="docs.html" class="btn-secondary">📖 Read the Docs</a>
-    </div>
-</section>
+    <h3>verify — check the proof</h3>
+    <p>Loads <code>vk.json</code> and <code>proof.json</code> and verifies against the public inputs <strong>bound into the proof</strong>. Exit status is <code>0</code> for a valid proof, <code>1</code> if it is rejected or tampered.</p>
+    <pre><span class="prompt">$</span> astra prove verify examples/sum.zara
+<span class="ok">✓ PROOF VERIFIED</span></pre>
 
-<footer>
-    <p>✦ <strong>Astra</strong> — Zero-Knowledge Proof Toolkit</p>
-    <p style="margin-top: 8px;">
-        <a href="playground.html">Playground</a> ·
-        <a href="docs.html">Docs</a> ·
-        <a href="https://github.com/SURUJ404/Zarathustra">GitHub</a>
+    <div class="note"><strong>Backends.</strong> Use <code>--backend legacy</code> to select the hand-rolled reference implementation instead of the default <code>ark-groth16</code>.</div>
+
+    <h2 id="audit">Security Audit <span class="anchor">#</span></h2>
+    <p>Scan circuits and smart contracts for vulnerable patterns, and fail CI when findings exceed a severity threshold.</p>
+    <pre><span class="prompt">$</span> astra audit .
+<span class="prompt">$</span> astra audit --format json -o audit.json .
+<span class="prompt">$</span> astra audit --deny high .</pre>
+    <p>The scanner runs <strong>signal-flow analysis</strong> (unconstrained public inputs), <strong>CEI / reentrancy</strong> checks for Solidity, plus pattern-based checks (<code>CIR-001…006</code>, <code>SOL-001…006</code>).</p>
+
+    <h2 id="publish">Publishing <span class="anchor">#</span></h2>
+    <p>Export artifacts for target platforms. Today <code>jt</code> writes real JSON test vectors from your proof and verifying key:</p>
+    <pre><span class="prompt">$</span> astra publish -t jt
+<span class="output">publish: wrote zara_test_vectors.json
+  curve:    bls12-381
+  protocol: groth16</span></pre>
+    <p>The <code>evm</code> target honestly refuses BLS12-381 (no Ethereum pairing precompile for it) rather than emitting an invalid contract; <code>starknet</code>, <code>wasm</code>, and <code>aleo</code> are not yet implemented.</p>
+
+    <div class="callout">For the complete option list for every command, see the <a href="docs.html" style="color: var(--accent);">CLI Reference</a>.</div>
+
+</main>
+</div>
+
+<footer style="text-align:center; padding:40px 24px; border-top:1px solid var(--border); color:var(--text2); font-size:13px;">
+    <p>✦ <strong>Zarathustra</strong> — <strong>Astra</strong> zkSNARK toolkit · <strong>Zara</strong> circuit language</p>
+    <p style="margin-top:8px;">
+        <a href="docs.html" style="color:var(--accent); text-decoration:none;">CLI Reference</a> ·
+        <a href="playground.html" style="color:var(--accent); text-decoration:none;">Playground</a> ·
+        <a href="https://github.com/SURUJ404/Zarathustra" style="color:var(--accent); text-decoration:none;">GitHub</a>
     </p>
 </footer>
 
