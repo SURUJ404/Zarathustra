@@ -8,6 +8,7 @@ on:
       - 'api/**'
       - 'package*.json'
       - 'vercel.json'
+      - '.vercelignore'
       - 'Cargo.*'
       - 'astra_ir/**'
       - 'astra_frontend/**'

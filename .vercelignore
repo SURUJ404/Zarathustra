@@ -1,0 +1,10 @@
+target/
+node_modules/
+npm/
+web/work/
+web/public/pkg/
+*.wasm
+*.log
+proof.json
+.idea/
+.vscode/
