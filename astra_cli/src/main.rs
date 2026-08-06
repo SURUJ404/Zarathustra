@@ -61,6 +61,13 @@ fn main() {
                                 .default_value("")
                                 .allow_hyphen_values(true)
                                 .help("Private inputs (comma-separated)"),
+                        )
+                        .arg(
+                            clap::Arg::with_name("backend")
+                                .long("backend")
+                                .takes_value(true)
+                                .default_value("")
+                                .help("Proof system: ark-groth16 (default) or legacy"),
                         ),
                 )
                 .subcommand(
@@ -88,16 +95,21 @@ fn main() {
                                 .default_value("")
                                 .allow_hyphen_values(true)
                                 .help("Private inputs (comma-separated)"),
+                        )
+                        .arg(
+                            clap::Arg::with_name("backend")
+                                .long("backend")
+                                .takes_value(true)
+                                .default_value("")
+                                .help("Proof system: ark-groth16 (default) or legacy"),
                         ),
                 )
                 .subcommand(
                     SubCommand::with_name("verify")
-                        .about("Verify a proof against public inputs")
-                        .arg(
-                            clap::Arg::with_name("input")
-                                .required(true)
-                                .help("Source file"),
-                        )
+                        .about("Verify a proof against the public inputs bound in proof.json")
+                        .arg(clap::Arg::with_name("input").help(
+                            "Source file (kept for CLI compatibility; verify reads proof.json)",
+                        ))
                         .arg(
                             clap::Arg::with_name("public")
                                 .short("p")
@@ -115,6 +127,13 @@ fn main() {
                                 .default_value("")
                                 .allow_hyphen_values(true)
                                 .help("Private inputs (comma-separated)"),
+                        )
+                        .arg(
+                            clap::Arg::with_name("backend")
+                                .long("backend")
+                                .takes_value(true)
+                                .default_value("")
+                                .help("Proof system: ark-groth16 (default) or legacy"),
                         ),
                 ),
         )

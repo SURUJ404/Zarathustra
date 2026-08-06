@@ -7,6 +7,7 @@ description = "Proof-system registry: ark-groth16 binding (default) with the han
 
 [dependencies]
 astra_ir = { path = "../astra_ir" }
+astra_codegen = { path = "../astra_codegen" }
 bls12_381.workspace = true
 ff.workspace = true
 group.workspace = true
@@ -17,6 +18,9 @@ ark-bls12-381.workspace = true
 ark-groth16.workspace = true
 ark-snark.workspace = true
 ark-std.workspace = true
+ark-serialize.workspace = true
+serde_json.workspace = true
+serde.workspace = true
 
 [dev-dependencies]
 astra_codegen = { path = "../astra_codegen" }

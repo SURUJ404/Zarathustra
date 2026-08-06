@@ -3,7 +3,7 @@ use ff::Field;
 use std::collections::HashMap;
 
 use astra_ir::ir::{BinaryOp, Expr, Program, Stmt};
-use astra_ir::types::ConstraintSystem;
+use astra_ir::types::{Constraint, ConstraintSystem, R1CSTriple};
 
 pub fn compile(
     source: &str,
@@ -50,6 +50,7 @@ struct Compiler {
     a: Vec<Vec<(usize, Scalar)>>,
     b: Vec<Vec<(usize, Scalar)>>,
     c: Vec<Vec<(usize, Scalar)>>,
+    constraints: Vec<Constraint>,
     num_public: usize,
     num_private: usize,
 }
@@ -71,6 +72,7 @@ impl Compiler {
             a: Vec::new(),
             b: Vec::new(),
             c: Vec::new(),
+            constraints: Vec::new(),
             num_public: 1,
             num_private: 0,
         }
@@ -132,6 +134,24 @@ impl Compiler {
 
         let num_vars = self.var_values.len();
 
+        let mut r1cs = Vec::with_capacity(self.constraints.len());
+        for (k, (a_row, (b_row, c_row))) in self
+            .a
+            .iter()
+            .zip(self.b.iter().zip(self.c.iter()))
+            .enumerate()
+        {
+            let triple = match self.constraints.get(k) {
+                Some(Constraint::R1CS(t)) => t.clone(),
+                _ => R1CSTriple {
+                    a: a_row.clone(),
+                    b: b_row.clone(),
+                    c: c_row.clone(),
+                },
+            };
+            r1cs.push(Constraint::R1CS(triple));
+        }
+
         Ok(ConstraintSystem {
             num_public: self.num_public,
             num_private: self.num_private,
@@ -141,6 +161,7 @@ impl Compiler {
             b: self.b.clone(),
             c: self.c.clone(),
             witness: self.var_values.clone(),
+            constraints: r1cs,
         })
     }
 
@@ -179,6 +200,11 @@ impl Compiler {
                         self.a.push(self.lc_to_vec(&a_lc));
                         self.b.push(self.lc_to_vec(&b_lc));
                         self.c.push(self.lc_to_vec(&c_lc));
+                        self.constraints.push(Constraint::R1CS(R1CSTriple {
+                            a: self.lc_to_vec(&a_lc),
+                            b: self.lc_to_vec(&b_lc),
+                            c: self.lc_to_vec(&c_lc),
+                        }));
 
                         let mut result = LinearCombination::new();
                         result.add_term(result_idx, Scalar::ONE);
@@ -208,6 +234,11 @@ impl Compiler {
                 self.a.push(self.lc_to_vec(&a_lc));
                 self.b.push(self.lc_to_vec(&diff));
                 self.c.push(Vec::new());
+                self.constraints.push(Constraint::R1CS(R1CSTriple {
+                    a: self.lc_to_vec(&a_lc),
+                    b: self.lc_to_vec(&diff),
+                    c: Vec::new(),
+                }));
                 Ok(())
             }
             Stmt::Return(_) => Ok(()),

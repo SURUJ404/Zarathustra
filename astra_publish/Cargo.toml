@@ -6,3 +6,4 @@ license = "Apache-2.0"
 description = "Verifier export targets for Zara circuits (EVM, Starknet, WASM, Aleo, JSON test vectors)."
 
 [dependencies]
+serde_json.workspace = true

@@ -299,6 +299,7 @@ dependencies = [
  "ark-ff",
  "ark-groth16",
  "ark-relations",
+ "ark-serialize",
  "ark-snark",
  "ark-std",
  "astra_codegen",
@@ -307,11 +308,16 @@ dependencies = [
  "ff",
  "group",
  "rand",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
 name = "astra_publish"
 version = "0.1.0"
+dependencies = [
+ "serde_json",
+]
 
 [[package]]
 name = "astra_security"
@@ -332,6 +338,8 @@ name = "astra_stdlib"
 version = "0.1.0"
 dependencies = [
  "astra_ir",
+ "bls12_381",
+ "ff",
 ]
 
 [[package]]
