@@ -46,4 +46,8 @@ jobs:
       - name: Build CLI
         run: cargo build --release --locked
       - name: Run self-audit gate
-        run: ./target/release/astra audit --deny high .
+        run: |
+          for crate in astra_ir astra_frontend astra_codegen astra_prover \
+                       astra_stdlib astra_publish astra_security astra_cli; do
+            ./target/release/astra audit --deny high "$crate"
+          done

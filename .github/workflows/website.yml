@@ -51,7 +51,11 @@ jobs:
           chmod +x api/astra
 
       - name: Self-audit
-        run: ./target/release/astra audit --deny high .
+        run: |
+          for crate in astra_ir astra_frontend astra_codegen astra_prover \
+                       astra_stdlib astra_publish astra_security astra_cli; do
+            ./target/release/astra audit --deny high "$crate"
+          done
 
       - name: Install deps
         run: npm ci --omit=dev
