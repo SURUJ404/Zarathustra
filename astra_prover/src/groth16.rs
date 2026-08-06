@@ -118,8 +118,17 @@ mod tests {
             .is_satisfied()
             .map_err(|e| format!("is_satisfied failed: {e:?}"))?;
         if !satisfied {
-            eprintln!("DEBUG pub={} priv={} vars={} cons={}", cs.num_public, cs.num_private, cs.num_variables, cs.num_constraints);
-            eprintln!("DEBUG witness = {:?}", cs.witness.iter().map(astra_ir::types::scalar_display).collect::<Vec<_>>());
+            eprintln!(
+                "DEBUG pub={} priv={} vars={} cons={}",
+                cs.num_public, cs.num_private, cs.num_variables, cs.num_constraints
+            );
+            eprintln!(
+                "DEBUG witness = {:?}",
+                cs.witness
+                    .iter()
+                    .map(astra_ir::types::scalar_display)
+                    .collect::<Vec<_>>()
+            );
             for (j, (ar, (br, cr))) in cs.a.iter().zip(cs.b.iter().zip(cs.c.iter())).enumerate() {
                 eprintln!("DEBUG con {j}: a={ar:?} b={br:?} c={cr:?}");
             }
