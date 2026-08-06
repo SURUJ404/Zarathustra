@@ -34,6 +34,10 @@ pub struct ConstraintSystem {
     pub b: Vec<Vec<(usize, Scalar)>>,
     pub c: Vec<Vec<(usize, Scalar)>>,
     pub witness: Vec<Scalar>,
+    /// Plonkish-first constraint kinds produced by the compiler. The `R1CS`
+    /// variant mirrors the legacy `a/b/c` triples; `Plonkish/CustomGate/Lookup/
+    /// Range` are the forward targets for Plonk/Nova/folding backends.
+    pub constraints: Vec<Constraint>,
 }
 
 #[derive(Debug, Clone)]

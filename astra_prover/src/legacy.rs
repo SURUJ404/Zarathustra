@@ -5,6 +5,7 @@
 
 use bls12_381::{G1Affine, G1Projective, G2Affine, G2Projective, Scalar};
 use ff::Field;
+use ff::PrimeField;
 use group::{prime::PrimeCurveAffine, Curve};
 use rand::thread_rng;
 
@@ -394,25 +395,285 @@ pub fn verify(vk: &LegacyVerifyingKey, public_inputs: &[Scalar], proof: &LegacyP
     a_b == ab + ic_g + c_d
 }
 
+// ---- legacy serialization (reference backend only) ----
+
+fn hexlify(bytes: &[u8]) -> String {
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for b in bytes {
+        out.push_str(&format!("{:02x}", b));
+    }
+    out
+}
+
+fn unhex(s: &str) -> Result<Vec<u8>, String> {
+    let s = s.strip_prefix("0x").unwrap_or(s);
+    if !s.len().is_multiple_of(2) {
+        return Err("hex string has odd length".into());
+    }
+    (0..s.len())
+        .step_by(2)
+        .map(|i| {
+            u8::from_str_radix(&s[i..i + 2], 16)
+                .map_err(|_| format!("invalid hex byte near index {i}"))
+        })
+        .collect()
+}
+
+pub fn g1_hex(p: &G1Affine) -> String {
+    hexlify(&p.to_compressed())
+}
+
+pub fn g2_hex(p: &G2Affine) -> String {
+    hexlify(&p.to_compressed())
+}
+
+pub fn g1_dehex(s: &str) -> Result<G1Affine, String> {
+    let bytes = unhex(s)?;
+    if bytes.len() != 48 {
+        return Err("G1 affine must decode to 48 bytes".into());
+    }
+    let mut arr = [0u8; 48];
+    arr.copy_from_slice(&bytes);
+    Option::from(G1Affine::from_compressed(&arr)).ok_or_else(|| "invalid G1 point".into())
+}
+
+pub fn g2_dehex(s: &str) -> Result<G2Affine, String> {
+    let bytes = unhex(s)?;
+    if bytes.len() != 96 {
+        return Err("G2 affine must decode to 96 bytes".into());
+    }
+    let mut arr = [0u8; 96];
+    arr.copy_from_slice(&bytes);
+    Option::from(G2Affine::from_compressed(&arr)).ok_or_else(|| "invalid G2 point".into())
+}
+
+pub fn scalar_hex(s: &Scalar) -> String {
+    hexlify(s.to_repr().as_ref())
+}
+
+pub fn scalar_dehex(s: &str) -> Result<Scalar, String> {
+    let bytes = unhex(s)?;
+    let mut repr = <Scalar as PrimeField>::Repr::default();
+    if bytes.len() != repr.as_ref().len() {
+        return Err(format!(
+            "scalar must decode to {} bytes",
+            repr.as_ref().len()
+        ));
+    }
+    repr.as_mut().copy_from_slice(&bytes);
+    Option::from(Scalar::from_repr(repr)).ok_or_else(|| "invalid scalar".into())
+}
+
+fn field_str<'a>(v: &'a serde_json::Value, key: &str) -> Result<&'a str, String> {
+    v.get(key)
+        .and_then(|x| x.as_str())
+        .ok_or_else(|| format!("pk/vk/proof json missing `{key}`"))
+}
+
+fn g1_list(v: &serde_json::Value, key: &str) -> Result<Vec<G1Affine>, String> {
+    let arr = v
+        .get(key)
+        .and_then(|x| x.as_array())
+        .ok_or_else(|| format!("pk/vk/proof json missing `{key}`"))?;
+    arr.iter()
+        .map(|e| {
+            let s = e
+                .as_str()
+                .ok_or_else(|| format!("`{key}` entry not a hex string"))?;
+            g1_dehex(s)
+        })
+        .collect()
+}
+
+fn g2_list(v: &serde_json::Value, key: &str) -> Result<Vec<G2Affine>, String> {
+    let arr = v
+        .get(key)
+        .and_then(|x| x.as_array())
+        .ok_or_else(|| format!("pk/vk/proof json missing `{key}`"))?;
+    arr.iter()
+        .map(|e| {
+            let s = e
+                .as_str()
+                .ok_or_else(|| format!("`{key}` entry not a hex string"))?;
+            g2_dehex(s)
+        })
+        .collect()
+}
+
+fn scalar_list(v: &serde_json::Value, key: &str) -> Result<Vec<Scalar>, String> {
+    let arr = v
+        .get(key)
+        .and_then(|x| x.as_array())
+        .ok_or_else(|| format!("pk/vk/proof json missing `{key}`"))?;
+    arr.iter()
+        .map(|e| {
+            let s = e
+                .as_str()
+                .ok_or_else(|| format!("`{key}` entry not a hex string"))?;
+            scalar_dehex(s)
+        })
+        .collect()
+}
+
+fn scalar_matrix(v: &serde_json::Value, key: &str) -> Result<Vec<Vec<Scalar>>, String> {
+    let arr = v
+        .get(key)
+        .and_then(|x| x.as_array())
+        .ok_or_else(|| format!("pk/vk/proof json missing `{key}`"))?;
+    arr.iter()
+        .map(|row| {
+            let inner = row
+                .as_array()
+                .ok_or_else(|| format!("`{key}` row not an array"))?;
+            inner
+                .iter()
+                .map(|e| {
+                    let s = e
+                        .as_str()
+                        .ok_or_else(|| format!("`{key}` entry not a hex string"))?;
+                    scalar_dehex(s)
+                })
+                .collect()
+        })
+        .collect()
+}
+
+pub fn pk_to_value(pk: &LegacyProvingKey) -> serde_json::Value {
+    serde_json::json!({
+        "protocol": crate::groth16::DEFAULT_PROTOCOL,
+        "curve": crate::groth16::DEFAULT_CURVE,
+        "implementation": "legacy",
+        "alpha_g1": g1_hex(&pk.alpha_g1),
+        "beta_g1": g1_hex(&pk.beta_g1),
+        "delta_g1": g1_hex(&pk.delta_g1),
+        "beta_g2": g2_hex(&pk.beta_g2),
+        "delta_g2": g2_hex(&pk.delta_g2),
+        "gamma_g2": g2_hex(&pk.gamma_g2),
+        "tau_powers_g1": pk.tau_powers_g1.iter().map(g1_hex).collect::<Vec<_>>(),
+        "tau_powers_g2": pk.tau_powers_g2.iter().map(g2_hex).collect::<Vec<_>>(),
+        "abc_public_g1": pk.abc_public_g1.iter().map(g1_hex).collect::<Vec<_>>(),
+        "abc_private_g1": pk.abc_private_g1.iter().map(g1_hex).collect::<Vec<_>>(),
+        "h_crs_g1": pk.h_crs_g1.iter().map(g1_hex).collect::<Vec<_>>(),
+        "l": pk.l,
+        "m": pk.m,
+        "n": pk.n,
+        "u_coeffs": pk.u_coeffs.iter().map(|row| row.iter().map(scalar_hex).collect::<Vec<_>>()).collect::<Vec<_>>(),
+        "v_coeffs": pk.v_coeffs.iter().map(|row| row.iter().map(scalar_hex).collect::<Vec<_>>()).collect::<Vec<_>>(),
+        "w_coeffs": pk.w_coeffs.iter().map(|row| row.iter().map(scalar_hex).collect::<Vec<_>>()).collect::<Vec<_>>(),
+        "z_coeffs": pk.z_coeffs.iter().map(scalar_hex).collect::<Vec<_>>(),
+    })
+}
+
+pub fn pk_from_value(v: &serde_json::Value) -> Result<LegacyProvingKey, String> {
+    Ok(LegacyProvingKey {
+        alpha_g1: g1_dehex(field_str(v, "alpha_g1")?)?,
+        beta_g1: g1_dehex(field_str(v, "beta_g1")?)?,
+        delta_g1: g1_dehex(field_str(v, "delta_g1")?)?,
+        beta_g2: g2_dehex(field_str(v, "beta_g2")?)?,
+        delta_g2: g2_dehex(field_str(v, "delta_g2")?)?,
+        gamma_g2: g2_dehex(field_str(v, "gamma_g2")?)?,
+        tau_powers_g1: g1_list(v, "tau_powers_g1")?,
+        tau_powers_g2: g2_list(v, "tau_powers_g2")?,
+        abc_public_g1: g1_list(v, "abc_public_g1")?,
+        abc_private_g1: g1_list(v, "abc_private_g1")?,
+        h_crs_g1: g1_list(v, "h_crs_g1")?,
+        l: v.get("l")
+            .and_then(|x| x.as_u64())
+            .ok_or_else(|| "missing `l`".to_string())? as usize,
+        m: v.get("m")
+            .and_then(|x| x.as_u64())
+            .ok_or_else(|| "missing `m`".to_string())? as usize,
+        n: v.get("n")
+            .and_then(|x| x.as_u64())
+            .ok_or_else(|| "missing `n`".to_string())? as usize,
+        u_coeffs: scalar_matrix(v, "u_coeffs")?,
+        v_coeffs: scalar_matrix(v, "v_coeffs")?,
+        w_coeffs: scalar_matrix(v, "w_coeffs")?,
+        z_coeffs: scalar_list(v, "z_coeffs")?,
+    })
+}
+
+pub fn vk_to_value(vk: &LegacyVerifyingKey) -> serde_json::Value {
+    serde_json::json!({
+        "protocol": crate::groth16::DEFAULT_PROTOCOL,
+        "curve": crate::groth16::DEFAULT_CURVE,
+        "implementation": "legacy",
+        "alpha_g1": g1_hex(&vk.alpha_g1),
+        "beta_g2": g2_hex(&vk.beta_g2),
+        "gamma_g2": g2_hex(&vk.gamma_g2),
+        "delta_g2": g2_hex(&vk.delta_g2),
+        "ic": vk.ic.iter().map(g1_hex).collect::<Vec<_>>(),
+    })
+}
+
+pub fn vk_from_value(v: &serde_json::Value) -> Result<LegacyVerifyingKey, String> {
+    Ok(LegacyVerifyingKey {
+        alpha_g1: g1_dehex(field_str(v, "alpha_g1")?)?,
+        beta_g2: g2_dehex(field_str(v, "beta_g2")?)?,
+        gamma_g2: g2_dehex(field_str(v, "gamma_g2")?)?,
+        delta_g2: g2_dehex(field_str(v, "delta_g2")?)?,
+        ic: g1_list(v, "ic")?,
+    })
+}
+
+pub fn proof_to_value(proof: &LegacyProof, public: &[Scalar]) -> serde_json::Value {
+    serde_json::json!({
+        "version": 1,
+        "protocol": crate::groth16::DEFAULT_PROTOCOL,
+        "curve": crate::groth16::DEFAULT_CURVE,
+        "implementation": "legacy",
+        "a": g1_hex(&proof.a),
+        "b": g2_hex(&proof.b),
+        "c": g1_hex(&proof.c),
+        "public": public.iter().map(astra_ir::types::scalar_display).collect::<Vec<_>>(),
+    })
+}
+
+pub fn proof_from_value(v: &serde_json::Value) -> Result<(LegacyProof, Vec<Scalar>), String> {
+    let proof = LegacyProof {
+        a: g1_dehex(field_str(v, "a")?)?,
+        b: g2_dehex(field_str(v, "b")?)?,
+        c: g1_dehex(field_str(v, "c")?)?,
+    };
+    let public = match v.get("public") {
+        Some(serde_json::Value::Array(arr)) => arr
+            .iter()
+            .filter_map(|e| e.as_str())
+            .map(astra_ir::types::scalar_from_dec_str)
+            .collect::<Result<Vec<_>, _>>()?,
+        _ => Vec::new(),
+    };
+    Ok((proof, public))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn make_simple_cs() -> ConstraintSystem {
+        use astra_ir::types::{Constraint, R1CSTriple};
+        let a = vec![vec![(1, Scalar::ONE)]];
+        let b = vec![vec![(2, Scalar::ONE)]];
+        let c = vec![vec![(3, Scalar::ONE)]];
         ConstraintSystem {
             num_public: 3,
             num_private: 1,
             num_variables: 4,
             num_constraints: 1,
-            a: vec![vec![(1, Scalar::ONE)]],
-            b: vec![vec![(2, Scalar::ONE)]],
-            c: vec![vec![(3, Scalar::ONE)]],
+            a: a.clone(),
+            b: b.clone(),
+            c: c.clone(),
             witness: vec![
                 Scalar::ONE,
                 Scalar::from(3u64),
                 Scalar::from(5u64),
                 Scalar::from(15u64),
             ],
+            constraints: vec![Constraint::R1CS(R1CSTriple {
+                a: a[0].clone(),
+                b: b[0].clone(),
+                c: c[0].clone(),
+            })],
         }
     }
 

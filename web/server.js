@@ -37,12 +37,18 @@ function sanitize(vals) {
     return vals.filter(v => typeof v === 'string' && /^[a-zA-Z0-9_,.\-]+$/.test(v));
 }
 
-function run(input, cmd, privateVals, publicVals) {
+function cleanup(dir) {
+    try { fs.rmSync(dir, { recursive: true, force: true }); } catch {}
+}
+
+function run(input, cmd, privateVals, publicVals, reuseDir) {
     const bin = path.join(BIN_PATH, 'astra');
     if (!fs.existsSync(bin)) {
         return { ok: false, error: 'astra binary not found' };
     }
-    const f = path.join(WORK_DIR, `${crypto.randomUUID()}.zara`);
+    const reqDir = reuseDir || path.join(WORK_DIR, crypto.randomUUID());
+    fs.mkdirSync(reqDir, { recursive: true });
+    const f = path.join(reqDir, 'zara_main.zara');
     try {
         fs.writeFileSync(f, input);
         const pv = sanitize(privateVals);
@@ -50,17 +56,28 @@ function run(input, cmd, privateVals, publicVals) {
         const privateArg = pv.length ? `-r ${pv.join(',')}` : '';
         const publicArg = pb.length ? `-p ${pb.join(',')}` : '';
         const out = execSync(`"${bin}" ${cmd} ${privateArg} ${publicArg} "${f}"`, {
-            cwd: WORK_DIR,
+            cwd: reqDir,
             encoding: 'utf-8',
             maxBuffer: MAX_FILE_SIZE * 1024 * 1024,
-            timeout: 30000,
+            timeout: 60000,
             shell: false,
         });
-        return { ok: true, stdout: out.trim() };
+        return { ok: true, stdout: out.trim(), dir: reqDir };
     } catch (e) {
-        return { ok: false, error: e.stderr?.trim() || e.message, stdout: e.stdout?.trim() || '' };
-    } finally {
-        try { fs.unlinkSync(f); } catch {}
+        return {
+            ok: false,
+            error: e.stderr?.trim() || e.message,
+            stdout: e.stdout?.trim() || '',
+            dir: reqDir,
+        };
+    }
+}
+
+function readJsonOrNull(file) {
+    try {
+        return JSON.parse(fs.readFileSync(file, 'utf-8'));
+    } catch {
+        return null;
     }
 }
 
@@ -69,6 +86,8 @@ app.post('/api/compile', (req, res) => {
         return res.status(400).json({ ok: false, error: 'code must be a string' });
     }
     const r = run(req.body.code, 'prove compile', req.body.private, req.body.public);
+    cleanup(r.dir);
+    delete r.dir;
     res.json(r);
 });
 
@@ -77,12 +96,12 @@ app.post('/api/prove', (req, res) => {
         return res.status(400).json({ ok: false, error: 'code must be a string' });
     }
     const r = run(req.body.code, 'prove prove', req.body.private, req.body.public);
-    const pf = path.join(WORK_DIR, 'proof.json');
     let proof = null;
-    if (fs.existsSync(pf)) {
-        try { proof = JSON.parse(fs.readFileSync(pf, 'utf-8')); } catch {}
-        try { fs.unlinkSync(pf); } catch {}
+    if (r.ok) {
+        proof = readJsonOrNull(path.join(r.dir, 'proof.json'));
     }
+    cleanup(r.dir);
+    delete r.dir;
     res.json({ ...r, proof });
 });
 
@@ -90,8 +109,17 @@ app.post('/api/verify', (req, res) => {
     if (typeof req.body.code !== 'string') {
         return res.status(400).json({ ok: false, error: 'code must be a string' });
     }
-    const r = run(req.body.code, 'prove verify', req.body.private, req.body.public);
-    res.json(r);
+    const r = run(req.body.code, 'prove prove', req.body.private, req.body.public);
+    if (!r.ok) {
+        cleanup(r.dir);
+        delete r.dir;
+        return res.json(r);
+    }
+    const v = run('', 'prove verify', req.body.private, req.body.public, r.dir);
+    cleanup(r.dir);
+    delete r.dir;
+    delete v.dir;
+    res.json({ ok: v.ok, stdout: v.stdout, error: v.error });
 });
 
 if (!IS_VERCEL) {

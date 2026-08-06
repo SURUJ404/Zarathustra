@@ -7,6 +7,7 @@
 #[doc(hidden)]
 pub mod legacy;
 
+pub mod backend;
 pub mod groth16;
 
 pub use groth16::{DefaultCurve, Groth16, Proof, ProvingKey, VerifyingKey};

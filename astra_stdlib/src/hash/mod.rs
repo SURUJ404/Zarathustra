@@ -1,7 +1,7 @@
-//! Cryptographic hash gadgets.
+//! Hash gadgets.
 //!
-//! Planned: `poseidon` (priority 1), `sha256`. Placeholder until the
-//! arkworks-backed circuits land.
+//! Implemented: Poseidon (width-3 permutation + 2-to-1 compression + sponge,
+//! see [`poseidon`]). Planned: SHA-256.
 
 pub mod poseidon;
 pub mod sha256;
