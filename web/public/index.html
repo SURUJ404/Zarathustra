@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Astra — Zero-Knowledge Proofs, Simplified</title>
+<title>Zarathustra — Astra zkSNARK Toolkit</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -22,6 +22,7 @@
     --error: #f87171;
     --gradient: linear-gradient(135deg, #d4a84b, #f0c860, #d4a84b);
 }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
 body {
     font-family: 'Inter', -apple-system, sans-serif;
     background: var(--bg);
@@ -45,10 +46,11 @@ nav {
 .logo span { color: var(--accent); }
 .nav-links { display: flex; gap: 24px; align-items: center; }
 .nav-links a { color: var(--text2); text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; }
-.nav-links a:hover { color: var(--text); }
+.nav-links a:hover, .nav-links a.active { color: var(--text); }
 .btn-nav { background: var(--gradient); color: #0a0a0f !important; padding: 8px 20px; border-radius: 8px; font-weight: 700 !important; }
+
 .hero {
-    min-height: 100vh;
+    min-height: 88vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -56,7 +58,7 @@ nav {
     text-align: center;
     padding: 120px 24px 80px;
     background:
-        radial-gradient(ellipse 600px 400px at 50% -20%, rgba(212,168,75,0.08), transparent),
+        radial-gradient(ellipse 700px 450px at 50% -20%, rgba(212,168,75,0.08), transparent),
         radial-gradient(ellipse 400px 400px at 20% 80%, rgba(212,168,75,0.04), transparent),
         var(--bg);
 }
@@ -72,20 +74,21 @@ nav {
     margin-bottom: 24px;
 }
 .hero h1 {
-    font-size: clamp(48px, 8vw, 88px);
+    font-size: clamp(42px, 7vw, 72px);
     font-weight: 800;
     letter-spacing: -2px;
     line-height: 1;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     background: linear-gradient(135deg, #fff 0%, var(--accent) 50%, #fff 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
+.hero h1 span { -webkit-text-fill-color: var(--accent); }
 .hero p {
     font-size: 18px;
     color: var(--text2);
-    max-width: 600px;
+    max-width: 680px;
     margin-bottom: 40px;
     line-height: 1.7;
 }
@@ -102,8 +105,8 @@ nav {
     transition: all 0.2s;
     cursor: pointer;
     border: none;
+    background: var(--gradient); color: #0a0a0f;
 }
-.btn-primary { background: var(--gradient); color: #0a0a0f; }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(212,168,75,0.3); }
 .btn-secondary {
     background: transparent;
@@ -117,191 +120,219 @@ nav {
     transition: 0.2s;
 }
 .btn-secondary:hover { border-color: var(--text2); background: var(--bg2); }
-section { padding: 100px 24px; }
-.section-header {
-    text-align: center;
-    max-width: 700px;
-    margin: 0 auto 60px;
+
+.layout { display: flex; max-width: 1240px; margin: 0 auto; padding: 40px 24px 80px; gap: 40px; }
+.toc {
+    flex: 0 0 240px;
+    position: sticky;
+    top: 90px;
+    align-self: flex-start;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    display: none;
 }
-.section-header h2 {
-    font-size: 36px;
-    font-weight: 700;
-    margin-bottom: 12px;
-    letter-spacing: -1px;
-}
-.section-header h2 span { color: var(--accent); }
-.section-header p { color: var(--text2); font-size: 16px; }
-.contrast-section { background: var(--bg2); }
-.contrast-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 2px;
-    max-width: 1000px;
-    margin: 0 auto;
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-}
-.contrast-header {
-    padding: 20px;
-    font-weight: 700;
-    font-size: 14px;
+.toc h4 {
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;
-    text-align: center;
+    color: var(--text2);
+    font-weight: 600;
+    margin-bottom: 16px;
 }
-.contrast-header.traditional { background: rgba(248,113,113,0.1); color: var(--error); }
-.contrast-header.astra { background: rgba(212,168,75,0.1); color: var(--accent); }
-.contrast-header.why { background: rgba(74,222,128,0.1); color: var(--success); }
-.contrast-cell {
-    padding: 20px;
+.toc a {
+    display: block;
+    color: var(--text2);
+    text-decoration: none;
     font-size: 14px;
-    background: var(--bg3);
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    padding: 6px 0 6px 14px;
+    border-left: 2px solid var(--border);
+    transition: 0.15s;
 }
-.contrast-cell .icon { font-size: 18px; flex-shrink: 0; }
-.contrast-cell.red { color: var(--error); }
-.contrast-cell.gold { color: var(--accent); }
-.contrast-cell.green { color: var(--success); }
-.flow {
+.toc a:hover, .toc a.active { color: var(--accent); border-left-color: var(--accent); }
+.toc a.sub { padding-left: 26px; font-size: 13px; }
+
+.doc { flex: 1; min-width: 0; }
+.doc h2 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin: 0 0 8px;
+}
+.doc h3 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 48px 0 12px;
+    letter-spacing: -0.3px;
+}
+.doc h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 28px 0 8px;
+}
+.doc > section { margin-bottom: 48px; }
+.doc > section:first-of-type { border-top: none; }
+.section-hr {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 12px;
-    flex-wrap: wrap;
-    max-width: 900px;
-    margin: 40px auto;
+    margin-bottom: 12px;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
-.flow-step {
+.section-hr::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.doc p { color: var(--text); font-size: 15px; margin-bottom: 14px; }
+.doc .lead { font-size: 17px; color: var(--text2); }
+.doc ul, .doc ol { padding-left: 22px; margin-bottom: 14px; }
+.doc li { font-size: 15px; color: var(--text); margin-bottom: 6px; }
+.card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 16px;
+}
+.card h4 { margin-top: 0; }
+.card p { margin-bottom: 0; }
+
+code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--accent);
+}
+pre {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin: 14px 0;
+    color: #e0e0e0;
+}
+pre .prompt { color: var(--accent); }
+pre .output { color: var(--text2); }
+pre .ok { color: var(--success); }
+pre .cm { color: #546e7a; font-style: italic; }
+pre .kw { color: #c792ea; }
+pre .fn { color: #82aaff; }
+pre .ty { color: #ffcb6b; }
+pre .num { color: #f78c6c; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 14px 0;
+}
+th {
+    background: var(--bg3);
+    padding: 12px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: left;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+}
+td {
+    padding: 12px 14px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+td.cmd { font-family: 'JetBrains Mono', monospace; color: var(--accent); font-weight: 600; white-space: nowrap; }
+
+/* Architecture diagram */
+.arch {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    overflow-x: auto;
+}
+.arch pre {
+    background: transparent;
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+.arch .highlight { color: var(--accent); font-weight: 600; }
+.arch .dim { color: var(--text2); }
+
+.pipeline {
+    display: flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0;
+}
+.pipe-step {
+    flex: 1;
+    min-width: 130px;
     background: var(--bg3);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 24px;
+    border-radius: 10px;
+    padding: 16px;
     text-align: center;
-    min-width: 120px;
-    transition: 0.2s;
 }
-.flow-step:hover { border-color: var(--accent-dim); }
-.flow-step .num {
+.pipe-step .n { font-weight: 800; color: var(--accent); font-size: 13px; }
+.pipe-step .t { font-weight: 600; font-size: 14px; margin-top: 4px; }
+.pipe-step .d { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.pipe-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--accent-dim);
+    font-weight: 300;
+}
+
+/* Timeline / status */
+.status {
     display: inline-flex;
-    width: 28px; height: 28px;
-    align-items: center; justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 100px;
+    color: var(--accent);
+    background: rgba(212,168,75,0.1);
+    border: 1px solid rgba(212,168,75,0.2);
+    margin-bottom: 16px;
+}
+.steps { counter-reset: step; list-style: none; padding-left: 0; }
+.steps > li {
+    position: relative;
+    padding-left: 40px;
+    margin-bottom: 18px;
+    counter-increment: step;
+}
+.steps > li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    width: 26px; height: 26px;
     border-radius: 50%;
     background: var(--gradient);
     color: #0a0a0f;
     font-weight: 800;
     font-size: 13px;
-    margin-bottom: 8px;
-}
-.flow-step .label { font-size: 13px; font-weight: 600; }
-.flow-step .desc { font-size: 11px; color: var(--text2); margin-top: 4px; }
-.flow-arrow { color: var(--accent-dim); font-size: 24px; font-weight: 300; }
-.demo-section {
-    background:
-        radial-gradient(ellipse 500px 300px at 30% 50%, rgba(212,168,75,0.03), transparent),
-        var(--bg);
-}
-.code-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    max-width: 1000px;
-    margin: 0 auto;
-}
-.code-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-}
-.code-card .card-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
-    background: var(--bg3);
-    border-bottom: 1px solid var(--border);
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text2);
+    justify-content: center;
 }
-.code-card .card-header .lang { color: var(--accent); }
-.code-card pre {
-    padding: 20px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    line-height: 1.7;
-    overflow-x: auto;
-    color: #e0e0e0;
-}
-.code-card pre .kw { color: #c792ea; }
-.code-card pre .fn { color: #82aaff; }
-.code-card pre .ty { color: #ffcb6b; }
-.code-card pre .cm { color: #546e7a; font-style: italic; }
-.code-card pre .str { color: #c3e88d; }
-.code-card pre .num { color: #f78c6c; }
-.output-card .card-header { color: var(--success); }
-.output-card pre { color: var(--text2); }
-.output-card pre .ok { color: var(--success); }
-.cli-demo {
-    max-width: 700px;
-    margin: 40px auto;
-    background: #0d0d14;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-}
-.cli-demo .cli-header {
-    display: flex;
-    gap: 8px;
-    padding: 12px 16px;
-    background: var(--bg3);
-    border-bottom: 1px solid var(--border);
-}
-.cli-demo .dot { width: 10px; height: 10px; border-radius: 50%; }
-.cli-demo .dot.r { background: #ff5f57; }
-.cli-demo .dot.y { background: #ffbd2e; }
-.cli-demo .dot.g { background: #28c840; }
-.cli-demo .cli-title { font-size: 11px; color: var(--text2); margin-left: 8px; }
-.cli-demo pre {
-    padding: 20px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    line-height: 1.8;
-}
-.cli-demo pre .prompt { color: var(--accent); }
-.cli-demo pre .output { color: var(--text2); }
-.cli-demo pre .ok { color: var(--success); }
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-    max-width: 1000px;
-    margin: 0 auto;
-}
-.feature-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    transition: 0.2s;
-}
-.feature-card:hover { border-color: var(--accent-dim); transform: translateY(-2px); }
-.feature-card .icon { font-size: 32px; margin-bottom: 12px; }
-.feature-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-.feature-card p { font-size: 13px; color: var(--text2); line-height: 1.6; }
-.cta-section {
-    text-align: center;
-    background: var(--bg2);
-    border-top: 1px solid var(--border);
-}
-.cta-section h2 { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
-.cta-section h2 span { color: var(--accent); }
-.cta-section p { color: var(--text2); font-size: 16px; max-width: 600px; margin: 0 auto 32px; }
+
 footer {
     text-align: center;
     padding: 40px 24px;
@@ -310,218 +341,264 @@ footer {
     font-size: 13px;
 }
 footer a { color: var(--accent); text-decoration: none; }
+
+@media (min-width: 981px) { .toc { display: block; } }
 @media (max-width: 768px) {
     nav { padding: 12px 20px; }
     .nav-links a:not(.btn-nav) { display: none; }
-    .contrast-grid { grid-template-columns: 1fr; }
-    .code-grid { grid-template-columns: 1fr; }
-    .flow { flex-direction: column; }
-    .flow-arrow { transform: rotate(90deg); }
+    .doc { padding-top: 0; }
+    pre { font-size: 12px; }
 }
 </style>
 </head>
 <body>
 
 <nav>
-    <div class="logo">✦ <span>Astra</span></div>
+    <div class="logo">✦ <span>Zarathustra</span></div>
     <div class="nav-links">
-        <a href="#contrast">Why</a>
-        <a href="#demo">Demo</a>
-        <a href="docs.html">Docs</a>
-        <a href="#features">Features</a>
+        <a href="#what">What &amp; Why</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#quickstart">Quickstart</a>
+        <a href="docs.html">CLI Docs</a>
         <a href="playground.html" class="btn-nav">Playground →</a>
     </div>
 </nav>
 
 <section class="hero">
-    <div class="hero-badge">⚡ Zero-Knowledge Proof Toolkit</div>
-    <h1>Write Code.<br>Prove Anything.</h1>
-    <p>A high-level DSL that compiles to zkSNARKs — write Python-like code, generate zero-knowledge proofs, and verify them on-chain in minutes.</p>
+    <div class="hero-badge">⚡ Rust Zero-Knowledge Proof Toolkit</div>
+    <h1>Zarathustra <span>Astra</span></h1>
+    <p>A zero-knowledge proof toolkit in Rust with a first-class domain-specific language for circuits: <strong>Zara</strong> (<code>.zara</code>). Write readable code, compile it to R1CS constraints, and prove &amp; verify statements without revealing the secrets.</p>
     <div class="hero-btns">
-        <a href="playground.html" class="btn-primary">▶ Try the Playground</a>
-        <a href="#demo" class="btn-secondary">See How It Works ↓</a>
+        <a href="#quickstart" class="btn-primary">Get Started →</a>
+        <a href="playground.html" class="btn-secondary">▶ Try the Playground</a>
+        <a href="docs.html" class="btn-secondary">📖 CLI Reference</a>
     </div>
 </section>
 
-<section class="contrast-section" id="contrast">
-    <div class="section-header">
-        <h2>Traditional zkSNARKs <span>vs</span> Astra</h2>
-        <p>Building zero-knowledge proofs the old way vs a developer-friendly approach.</p>
-    </div>
-    <div class="contrast-grid">
-        <div class="contrast-header traditional">❌ Traditional Approach</div>
-        <div class="contrast-header astra">✅ Astra</div>
-        <div class="contrast-header why">💡 Why It Matters</div>
+<div class="layout">
+<div class="toc">
+    <h3>Contents</h3>
+    <a href="#what">1. What is Astra</a>
+    <a href="#why">2. Why Zara</a>
+    <a href="#architecture">3. Architecture</a>
+    <a href="#pipeline" class="sub">Proof pipeline</a>
+    <a href="#crates" class="sub">Workspace crates</a>
+    <a href="#quickstart">4. Quickstart</a>
+    <a href="#install" class="sub">Install</a>
+    <a href="#proof" class="sub">Prove a circuit</a>
+    <a href="#audit" class="sub">Security audit</a>
+    <a href="#playground">5. Playground</a>
+    <a href="#wasm" class="sub">WASM vs API</a>
+    <a href="#project">6. Scaffold a project</a>
+    <a href="#publish">7. Publish verifiers</a>
+    <a href="#status">8. Status</a>
+</div>
 
-        <div class="contrast-cell red"><span class="icon">⚠️</span> Write R1CS constraints manually</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> Python-like high-level DSL</div>
-        <div class="contrast-cell green"><span class="icon">🚀</span> 10x faster development cycle</div>
+<main class="doc">
 
-        <div class="contrast-cell red"><span class="icon">⚠️</span> Expert-level cryptography knowledge required</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> No crypto PhD needed — just write logic</div>
-        <div class="contrast-cell green"><span class="icon">🚀</span> Accessible to any developer</div>
-
-        <div class="contrast-cell red"><span class="icon">⚠️</span> Wire up provers and verifiers from scratch</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> One command: compile → setup → prove → verify</div>
-        <div class="contrast-cell green"><span class="icon">🚀</span> Full toolchain, zero boilerplate</div>
-
-        <div class="contrast-cell red"><span class="icon">⚠️</span> Write custom Solidity for on-chain verification</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> `export-verifier` — one command to Solidity</div>
-        <div class="contrast-cell green"><span class="icon">🚀</span> Deploy to Ethereum in minutes</div>
-
-        <div class="contrast-cell red"><span class="icon">⚠️</span> Limited curve support, manual backend selection</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> 7 curves, 4 proving schemes, 3 backends</div>
-        <div class="contrast-cell green"><span class="icon">🚀</span> BN128, BLS, Pallas — pick what fits</div>
-
-        <div class="contrast-cell red"><span class="icon">⚠️</span> No standard library — build every gadget</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> Built-in SHA256, Poseidon, ECC, EdDSA</div>
-        <div class="contrast-cell green"><span class="icon">🚀</span> Ship faster with pre-built crypto</div>
-    </div>
-</section>
-
-<section class="demo-section" id="demo">
-    <div class="section-header">
-        <h2>See It <span>In Action</span></h2>
-        <p>Prove you know a number without revealing it. Here's the full pipeline.</p>
-    </div>
-
-    <div class="code-grid">
-        <div class="code-card">
-            <div class="card-header"><span>📄 program.zara</span><span class="lang">astra</span></div>
-            <pre>
-<span class="cm">// Prove knowledge of x without revealing it</span>
-<span class="kw">def</span> <span class="fn">main</span>(<span class="kw">private</span> <span class="ty">field</span> x, <span class="ty">field</span> y) {
-    <span class="kw">assert</span>(x * x == y);
-    <span class="kw">return</span> <span class="num">true</span>;
+<section id="what">
+    <div class="section-hr">What is it</div>
+    <h2>Zero-knowledge proofs, <span style="color:var(--accent)">simplified</span></h2>
+    <p class="lead">Astra lets you write a circuit like a normal Python-ish program and produce a real, verifiable zero-knowledge proof — without writing any constraint systems by hand.</p>
+    <p>A zero-knowledge proof convinces a verifier that a statement is true (e.g. <em>"I know a secret x such that x + y == 7"</em>) without revealing what <code>x</code> is. Building those proofs has historically required deep cryptographic expertise. Astra removes that barrier by providing:</p>
+    <ul>
+        <li>A readable, typed, imperative language (<strong>Zara</strong>) with <code>assert</code>-based constraints.</li>
+        <li>A full pipeline: <strong>compile → setup → prove → verify</strong> powered by <code>ark-groth16</code> on BLS12-381.</li>
+        <li>Static security analysis that flags unsafe circuits and Solidity verifiers before you ship.</li>
+        <li>A browser-native WASM surface and an in-browser playground.</li>
+    </ul>
+    <div class="card">
+        <h3>Example circuit — prove knowledge of <code>x</code> such that <code>x + y == sum</code></h3>
+        <pre><span class="cm">// Prove you know x, y such that x + y == sum</span>
+<span class="kw">def</span> <span class="fn">main</span>(<span class="ty">field</span> <span class="kw">public</span> sum, <span class="ty">field</span> <span class="kw">private</span> x, <span class="ty">field</span> <span class="kw">private</span> y) -> <span class="ty">field</span> {
+    <span class="kw">assert</span>(x + y == sum);
+    <span class="kw">return</span> <span class="num">1</span>;
 }</pre>
-        </div>
-        <div class="code-card output-card">
-            <div class="card-header"><span>🔍 Compilation Result</span><span class="lang">2 constraints</span></div>
-            <pre>
-<span class="ok">✓ Compilation successful</span>
-  Constraints:   <span class="num">2</span>
-  Curve:         bn128
-  Backend:       Groth16
-
-<span class="ok">✓ Proof generated</span>
-  Proving key:   proving.key
-  Proof:         proof.json
-
-<span class="ok">✓ Verified on-chain</span>
-  Gas used:      ~250,000
-  Status:        <span class="ok">VALID</span></pre>
-        </div>
-    </div>
-
-    <div class="cli-demo">
-        <div class="cli-header">
-            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-            <span class="cli-title">terminal — full pipeline</span>
-        </div>
-        <pre>
-<span class="prompt">$</span> astra compile -i program.zara --curve bn128
-<span class="output">Compiled code written to 'out'
-Number of constraints: 2</span>
-
-<span class="prompt">$</span> astra setup -i out
-<span class="output">Setup complete</span>
-
-<span class="prompt">$</span> astra witness -i out --stdin &lt;&lt;&lt; '["3", "9"]'
-<span class="output">Witness computed</span>
-
-<span class="prompt">$</span> astra prove -i out -w witness -p proving.key
-<span class="output"><span class="ok">✓ Proof generated</span></span>
-
-<span class="prompt">$</span> astra verify -v verification.key -j proof.json
-<span class="output"><span class="ok">✓ PROOF VERIFIED</span></span>
-
-<span class="prompt">$</span> astra deploy verifier -i verification.key
-<span class="output">verifier.sol — ready to deploy</span></pre>
-    </div>
-
-    <div class="section-header" style="margin-top: 60px;">
-        <h2>How It <span>Works</span></h2>
-        <p>The compiler pipeline — from source code to verified proof.</p>
-    </div>
-    <div class="flow">
-        <div class="flow-step"><div class="num">1</div><div class="label">Write Code</div><div class="desc">Python-like DSL</div></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">2</div><div class="label">Compile</div><div class="desc">R1CS constraints</div></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">3</div><div class="label">Setup</div><div class="desc">Generate keys</div></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">4</div><div class="label">Witness</div><div class="desc">Compute values</div></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">5</div><div class="label">Prove</div><div class="desc">Generate proof</div></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">6</div><div class="label">Verify</div><div class="desc">Check on-chain</div></div>
     </div>
 </section>
 
-<section id="features">
-    <div class="section-header">
-        <h2>Everything You <span>Need</span></h2>
-        <p>A complete zero-knowledge proving toolkit.</p>
-    </div>
-    <div class="features-grid">
-        <div class="feature-card">
-            <div class="icon">📝</div>
-            <h3>High-Level DSL</h3>
-            <p>Python-like syntax with types, generics, structs, arrays, and imports. No low-level constraint wrangling.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">🔐</div>
-            <h3>4 Proving Schemes</h3>
-            <p>Groth16, GM17, Marlin (universal), and Nova (IVC). Pick the right scheme for your use case.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">⛓️</div>
-            <h3>Solidity Export</h3>
-            <p>One command to generate a verifier contract. Deploy to Ethereum for ~250k gas per verification.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">📚</div>
-            <h3>Standard Library</h3>
-            <p>Built-in SHA256, Poseidon, Keccak, MiMC7, Blake2, ECC (BabyJubJub), EdDSA, and SNARK verifiers.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">🔄</div>
-            <h3>7 Curves Supported</h3>
-            <p>BN128, BLS12-381, BLS12-377, BW6-761, Pallas, Vesta — covering Ethereum, Filecoin, and Mina ecosystems.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">🛡️</div>
-            <h3>Security Scanner</h3>
-            <p>Built-in audit tool that detects vulnerable patterns in circuits and Solidity verifier contracts.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">🌐</div>
-            <h3>Web IDE + CLI</h3>
-            <p>Browser-based Monaco editor playground or terminal CLI. Same engine, any interface.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">⚡</div>
-            <h3>Rust Native</h3>
-            <p>Blazing fast compilation and proving powered by Rust with BLS12-381 and Groth16 backends.</p>
-        </div>
-    </div>
+<section id="section">
+    <div class="section-hr">Why</div>
+    <h2>Why <span style="color:var(--accent)">Zara</span></h2>
+    <p>Astra's goal is broad feature parity with — and eventually to overtake — <strong>ZoKrates</strong>: friendly syntax, multiple proof backends, static security analysis, and first-class deployment of verifiers.</p>
+    <ul>
+        <li><strong>Readable.</strong> Imperative, typed, <code>assert</code>-based constraints — no raw R1CS.</li>
+        <li><strong>Structured errors.</strong> Parse and compile diagnostics carry source spans, so errors point at the actual line.</li>
+        <li><strong>Built for tooling.</strong> An LSP hook (<code>DocumentService</code>) and a browser-native WASM frontend ship in the repo.</li>
+        <li><strong>Security-first.</strong> A built-in auditor runs signal-flow and CEI/reentrancy analysis.</li>
+    </ul>
 </section>
 
-<section class="cta-section">
-    <h2>Ready to Build? <span>Try It Now</span></h2>
-    <p>No installation needed — use the browser-based playground or install the CLI in seconds.</p>
-    <div class="hero-btns">
-        <a href="playground.html" class="btn-primary">▶ Launch Playground</a>
-        <a href="docs.html" class="btn-secondary">📖 Read the Docs</a>
+<section id="architecture">
+    <div class="section-hr">System architecture</div>
+    <h2>Layered <span style="color:var(--accent)">workspace</span></h2>
+    <p class="lead">Astra is split into a layered Rust workspace so each concern has a narrow, auditable boundary and a single source of truth for its data model.</p>
+
+    <h3>Proof pipeline</h3>
+    <div class="pipeline">
+        <div class="pipe-step"><div class="n">1</div><div class="t">Write Zara</div><div class="d">.zara source</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="n">2</div><div class="t">Compile</div><div class="d">R1CS constraints</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="n">3</div><div class="t">Setup</div><div class="d">pk.json / vk.json</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="n">4</div><div class="t">Prove</div><div class="d">proof.json</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="n">5</div><div class="t">Verify</div><div class="d">proof verified</div></div>
+    </div>
+
+    <h3>Data flow</h3>
+    <div class="arch">
+<pre><span class="dim">.zara source</span>
+   <span class="dim">│  parse</span>
+   <span class="dim">▼</span>
+<span class="highlight">astra_frontend</span> ──► <span class="highlight">astra_ir</span> <span class="dim">(AST / Program)</span>  ──► <span class="dim">document-service (LSP), WASM</span>
+   <span class="dim">│  lower</span>
+   <span class="dim">▼</span>
+<span class="highlight">astra_codegen</span> ──► <span class="dim">R1CS + witness (Constraint / ConstraintSystem)</span>
+   <span class="dim">│</span>
+   <span class="dim">├──►</span> <span class="highlight">astra_prover</span>  <span class="dim">──► ark-groth16 (default) / legacy reference</span>
+   <span class="dim">├──►</span> <span class="highlight">astra_publish</span> <span class="dim">──► VerifierTarget: evm, starknet, wasm, aleo, jt</span>
+   <span class="dim">└──►</span> <span class="highlight">astra_security</span><span class="dim"> ──► analyzers (signal-flow, CEI/reentrancy, regex)</span>
+<span class="highlight">astra_stdlib::gadgets</span> <span class="dim">── versioned, dependency-free, consumed by codegen</span></pre>
+    </div>
+
+    <h3>Workspace crates</h3>
+    <table>
+        <thead><tr><th style="width:190px">Crate</th><th>Role</th></tr></thead>
+        <tbody>
+            <tr><td class="cmd">astra_ir</td><td>Core IR: AST, R1CS, Plonkish-first <code>Constraint</code> kinds. Free of proof crypto so it's portable across backends.</td></tr>
+            <tr><td class="cmd">astra_frontend</td><td>Zara lexer/parser, span-aware errors, LSP hook, browser-native WASM bindings.</td></tr>
+            <tr><td class="cmd">astra_codegen</td><td>Lowers Zara to R1CS + witness; defines the <code>Backend</code> trait.</td></tr>
+            <tr><td class="cmd">astra_prover</td><td>Proof-system registry: ark-groth16 (default) + hand-rolled reference (<code>legacy</code>).</td></tr>
+            <tr><td class="cmd">astra_stdlib</td><td>Versioned gadget library (hash / signature / commitment / snark / primitive).</td></tr>
+            <tr><td class="cmd">astra_publish</td><td>Verifier export: EVM, Starknet, WASM, Aleo, JSON test vectors.</td></tr>
+            <tr><td class="cmd">astra_security</td><td>Static analyzers: signal flow, CEI/reentrancy, pattern checks (<code>CIR-001..006</code>, <code>SOL-001..006</code>).</td></tr>
+            <tr><td class="cmd">astra_cli</td><td>The <code>astra</code> binary — a thin <code>clap</code> interface over the layers.</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Boundaries</h3>
+    <ul>
+        <li><strong>astra_ir</strong> stays free of any proof-system crypto so the IR is portable across backends.</li>
+        <li><strong>astra_frontend</strong> owns the grammar, source-span errors, the LSP hook, and the WASM surface.</li>
+        <li><strong>astra_codegen</strong> lowers Zara → R1CS/witness and defines <code>Backend</code>.</li>
+        <li><strong>astra_prover</strong> registers proof systems (ark-groth16 default; <code>legacy.rs</code> kept as audit reference).</li>
+        <li><strong>astra_publish</strong> exposes <code>VerifierTarget</code> skeletons that return <code>Err("... not yet implemented in v0.0")</code> instead of emitting a fake verifier.</li>
+        <li><strong>astra_security</strong> runs deterministic static analysis.</li>
+        <li><strong>astra_cli</strong> is a thin binary over the layers.</li>
+    </ul>
+</section>
+
+<section>
+    <div class="section-hr">Quickstart</div>
+    <h2>Get started <span style="color:var(--accent)">in minutes</span></h2>
+
+    <h3>Install</h3>
+    <p>Build the workspace and the <code>astra</code> CLI:</p>
+    <pre><span class="prompt">$</span> cargo build --workspace --release
+<span class="prompt">$</span> cargo test --workspace   <span class="cm"># optional, run the suite</span></pre>
+
+    <h3>Run the full proof pipeline</h3>
+    <ol class="steps">
+        <li><strong>Compile</strong> Zara → R1CS + witness.<br>
+<pre><span class="prompt">$</span> astra prove compile -p 8 -r 3,5 examples/sum.zara</pre></li>
+        <li><strong>Setup</strong> — generate the CRS (<code>pk.json</code>, <code>vk.json</code>):<br>
+<pre><span class="prompt">$</span> astra prove setup -p 8 -r 3,5 examples/sum.zara</pre></li>
+        <li><strong>Prove</strong> — produce <code>proof.json</code>:<br>
+<pre><span class="prompt">$</span> astra prove prove -p 8 -r 3,5 examples/sum.zara</pre></li>
+        <li><strong>Verify</strong> — validate the proof (exit 0 / 1):<br>
+<pre><span class="prompt">$</span> astra prove verify -p 8 -r 3,5 examples/sum.zara
+<span class="ok">∞  PROOF VERIFIED</span></pre></li>
+    </ol>
+    <p>All artifacts drop into the current working directory: <code>pk.json</code>, <code>vk.json</code>, <code>proof.json</code>.</p>
+
+    <h3>CLI surface at a glance</h3>
+    <table>
+        <thead><tr><th style="width:230px">Command</th><th>Purpose</th></tr></thead>
+        <tbody>
+            <tr><td class="cmd">prove compile / setup / prove / verify</td><td>Full .zara proof pipeline (ark-groth16 default).</td></tr>
+            <tr><td class="cmd">audit [-f json] [--deny high] [target]</td><td>Static security scan (Zara, Rust, Solidity).</td></tr>
+            <tr><td class="cmd">deploy init / verifier / verify</td><td>Circuit projects + verifier export.</td></tr>
+            <tr><td class="cmd">publish -t evm | starknet | wasm | aleo | jt</td><td>Verifier export targets.</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Security audit</h3>
+    <pre><span class="prompt">$</span> astra audit .                            <span class="cm"># terminal report</span>
+<span class="prompt">$</span> astra audit --format json -o audit.json .
+<span class="prompt">$</span> astra audit --deny high .               <span class="cm"># exit non-zero on HIGH+ findings</span></pre>
+    <p>Check IDs: <code>CIR-001..006</code> (circuits) and <code>SOL-001..006</code> (Solidity). Includes a signal-flow analysis that flags unconstrained public inputs at HIGH severity and a CEI / reentrancy check for Solidity verifiers.</p>
+</section>
+
+<section>
+    <div class="section-hr">Playground</div>
+    <h2>In-browser <span style="color:var(--accent)">editor</span></h2>
+    <p><code>web/public/playground.html</code> is a Monaco-based IDE. It loads the same engine your local CLI uses, but in the browser.</p>
+
+    <h3>WASM vs API backend</h3>
+    <table>
+        <thead><tr><th>Indicator</th><th>Meaning</th></tr></thead>
+        <tbody>
+            <tr><td class="cmd">🟢 WASM native</td><td>The WASM bundle (<code>pkg/astra_frontend.js</code>) compiled <strong>in the browser</strong> — no server required.</td></tr>
+            <tr><td class="cmd">⚪ WASM unavailable (API fallback)</td><td>No WASM bundle found; compile falls back to the <code>/api/*</code> backend.</td></tr>
+            <tr><td class="cmd">🟢 Backend OK</td><td>The API reachable; the <code>astra</code> binary is present on the server.</td></tr>
+        </tbody>
+    </table>
+    <ul>
+        <li><strong>Compile</strong> runs natively in the browser when the WASM bundle is present; otherwise via the API.</li>
+        <li><strong>Prove / verify</strong> currently require the backend — Groth16 is not WASM-safe yet.</li>
+    </ul>
+
+    <h3>Build the WASM bundle</h3>
+    <pre><span class="prompt">$</span> cargo build -p astra_frontend --target wasm32-unknown-unknown --release --features wasm
+<span class="prompt">$</span> cp target/wasm32-unknown-unknown/release/astra_frontend.wasm web/public/pkg/astra_frontend_bg.wasm</pre>
+</section>
+
+<section>
+    <div class="section-hr">Projects &amp; publishing</div>
+    <h2>Scaffold and <span style="color:var(--accent)">deploy</span></h2>
+    <h3>Project scaffolding</h3>
+    <pre><span class="prompt">$</span> astra deploy init project          <span class="cm"># creates project/src/main.zara</span>
+<span class="prompt">$</span> astra deploy verifier              <span class="cm"># Solidity export (errors out for now)</span>
+<span class="prompt">$</span> astra deploy verify                <span class="cm"># simulated on-chain verify (pending)</span></pre>
+    <h3>Verifier publishing</h3>
+    <pre><span class="prompt">$</span> astra publish -t jt                <span class="cm"># → zara_test_vectors.json (real proof + VK)</span>
+<span class="prompt">$</span> astra publish -t evm                <span class="cm"># BLS12-381 refuses; BN254 verifier pending</span></pre>
+</section>
+
+<section>
+    <div class="section-hr">Status &amp; roadmap</div>
+    <h2>Day-1 <span style="color:var(--accent)">archetype</span></h2>
+    <div class="card">
+        <span class="status">Status: day-1 archetype</span>
+        <ul>
+            <li>The workspace builds; the CLI runs a full <strong>compile → setup → prove → verify</strong> pipeline via ark-groth16.</li>
+            <li>The security analyzers run real checks.</li>
+            <li><code>cargo test</code> and <code>cargo clippy</code> are enforced in CI.</li>
+            <li>Verifier export targets (EVM, Starknet, WASM, Aleo) are day-1 skeletons that fail loudly rather than fake it.</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h3>Development commands</h3>
+        <pre><span class="prompt">$</span> cargo build --workspace
+<span class="prompt">$</span> cargo test --workspace
+<span class="prompt">$</span> cargo clippy --workspace --all-targets -- -D warnings
+<span class="prompt">$</span> cargo fmt --all</pre>
+        <p style="margin-top:12px;color:var(--text2)">All four are enforced in <code>.github/workflows/ci.yml</code>.</p>
     </div>
 </section>
+</main>
+</div>
 
 <footer>
-    <p>✦ <strong>Astra</strong> — Zero-Knowledge Proof Toolkit</p>
+    <p>✦ <strong>Zarathustra / Astra</strong> — Rust Zero-Knowledge Proof Toolkit</p>
     <p style="margin-top: 8px;">
+        <a href="#what">What</a> ·
+        <a href="#architecture">Architecture</a> ·
+        <a href="docs.html">CLI Docs</a> ·
         <a href="playground.html">Playground</a> ·
-        <a href="docs.html">Docs</a> ·
-        <a href="https://github.com/SURUJ404/ZARA">GitHub</a>
+        <a href="https://github.com/SURUJ404/Zarathustra">GitHub</a>
     </p>
 </footer>
 
