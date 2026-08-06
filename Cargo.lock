@@ -39,13 +39,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "ark-bn254"
+name = "ark-bls12-381"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d69eab57e8d2663efa5c63135b2af4f396d66424f88954c21104125ab6b3e6bc"
+checksum = "3df4dcc01ff89867cd86b0da835f23c3f02738353aaee7dde7495af71363b8d5"
 dependencies = [
  "ark-ec",
  "ark-ff",
+ "ark-serialize",
  "ark-std",
 ]
 
@@ -294,7 +295,7 @@ dependencies = [
 name = "astra_prover"
 version = "0.1.0"
 dependencies = [
- "ark-bn254",
+ "ark-bls12-381",
  "ark-ff",
  "ark-groth16",
  "ark-relations",
