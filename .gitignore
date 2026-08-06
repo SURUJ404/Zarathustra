@@ -1,4 +1,8 @@
 target/
+npm/astra/astra
+npm/astra/astra.exe
+npm/*/bin/astra
+npm/*/bin/astra.exe
 proof.json
 *.swp
 *.swo

@@ -85,7 +85,7 @@ nav {
 .hero p {
     font-size: 18px;
     color: var(--text2);
-    max-width: 600px;
+    max-width: 640px;
     margin-bottom: 40px;
     line-height: 1.7;
 }
@@ -134,9 +134,9 @@ section { padding: 100px 24px; }
 .contrast-section { background: var(--bg2); }
 .contrast-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 2px;
-    max-width: 1000px;
+    max-width: 900px;
     margin: 0 auto;
     border-radius: 16px;
     overflow: hidden;
@@ -152,7 +152,6 @@ section { padding: 100px 24px; }
 }
 .contrast-header.traditional { background: rgba(248,113,113,0.1); color: var(--error); }
 .contrast-header.astra { background: rgba(212,168,75,0.1); color: var(--accent); }
-.contrast-header.why { background: rgba(74,222,128,0.1); color: var(--success); }
 .contrast-cell {
     padding: 20px;
     font-size: 14px;
@@ -164,7 +163,6 @@ section { padding: 100px 24px; }
 .contrast-cell .icon { font-size: 18px; flex-shrink: 0; }
 .contrast-cell.red { color: var(--error); }
 .contrast-cell.gold { color: var(--accent); }
-.contrast-cell.green { color: var(--success); }
 .flow {
     display: flex;
     align-items: center;
@@ -336,7 +334,7 @@ footer a { color: var(--accent); text-decoration: none; }
 <section class="hero">
     <div class="hero-badge">⚡ Zero-Knowledge Proof Toolkit</div>
     <h1>Write Code.<br>Prove Anything.</h1>
-    <p>A high-level DSL that compiles to zkSNARKs — write Python-like code, generate zero-knowledge proofs, and verify them on-chain in minutes.</p>
+    <p>Zara is a high-level circuit DSL that compiles to zkSNARKs — write imperative, Python-like code, generate real Groth16 proofs, and verify them honestly.</p>
     <div class="hero-btns">
         <a href="playground.html" class="btn-primary">▶ Try the Playground</a>
         <a href="#demo" class="btn-secondary">See How It Works ↓</a>
@@ -351,65 +349,53 @@ footer a { color: var(--accent); text-decoration: none; }
     <div class="contrast-grid">
         <div class="contrast-header traditional">❌ Traditional Approach</div>
         <div class="contrast-header astra">✅ Astra</div>
-        <div class="contrast-header why">💡 Why It Matters</div>
 
         <div class="contrast-cell red"><span class="icon">⚠️</span> Write R1CS constraints manually</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> Python-like high-level DSL</div>
-        <div class="contrast-cell green"><span class="icon">🚀</span> 10x faster development cycle</div>
+        <div class="contrast-cell gold"><span class="icon">⚡</span> Imperative, typed, assert-based Zara DSL</div>
 
         <div class="contrast-cell red"><span class="icon">⚠️</span> Expert-level cryptography knowledge required</div>
         <div class="contrast-cell gold"><span class="icon">⚡</span> No crypto PhD needed — just write logic</div>
-        <div class="contrast-cell green"><span class="icon">🚀</span> Accessible to any developer</div>
 
         <div class="contrast-cell red"><span class="icon">⚠️</span> Wire up provers and verifiers from scratch</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> One command: compile → setup → prove → verify</div>
-        <div class="contrast-cell green"><span class="icon">🚀</span> Full toolchain, zero boilerplate</div>
+        <div class="contrast-cell gold"><span class="icon">⚡</span> One pipeline: compile → setup → prove → verify</div>
 
-        <div class="contrast-cell red"><span class="icon">⚠️</span> Write custom Solidity for on-chain verification</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> `export-verifier` — one command to Solidity</div>
-        <div class="contrast-cell green"><span class="icon">🚀</span> Deploy to Ethereum in minutes</div>
-
-        <div class="contrast-cell red"><span class="icon">⚠️</span> Limited curve support, manual backend selection</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> 7 curves, 4 proving schemes, 3 backends</div>
-        <div class="contrast-cell green"><span class="icon">🚀</span> BN128, BLS, Pallas — pick what fits</div>
-
-        <div class="contrast-cell red"><span class="icon">⚠️</span> No standard library — build every gadget</div>
-        <div class="contrast-cell gold"><span class="icon">⚡</span> Built-in SHA256, Poseidon, ECC, EdDSA</div>
-        <div class="contrast-cell green"><span class="icon">🚀</span> Ship faster with pre-built crypto</div>
+        <div class="contrast-cell red"><span class="icon">⚠️</span> Trust fake tooling that skips verification</div>
+        <div class="contrast-cell gold"><span class="icon">⚡</span> Honest by default: verify reads real keys + proof</div>
     </div>
 </section>
 
 <section class="demo-section" id="demo">
     <div class="section-header">
         <h2>See It <span>In Action</span></h2>
-        <p>Prove you know a number without revealing it. Here's the full pipeline.</p>
+        <p>Prove that you know x, y such that x + y == sum — without revealing x and y.</p>
     </div>
 
     <div class="code-grid">
         <div class="code-card">
-            <div class="card-header"><span>📄 program.zara</span><span class="lang">astra</span></div>
+            <div class="card-header"><span>📄 sum.zara</span><span class="lang">zara</span></div>
             <pre>
-<span class="cm">// Prove knowledge of x without revealing it</span>
-<span class="kw">def</span> <span class="fn">main</span>(<span class="kw">private</span> <span class="ty">field</span> x, <span class="ty">field</span> y) {
-    <span class="kw">assert</span>(x * x == y);
-    <span class="kw">return</span> <span class="num">true</span>;
+<span class="cm">// Prove you know x, y such that x + y == sum</span>
+<span class="kw">def</span> <span class="fn">main</span>(<span class="ty">field</span> <span class="kw">public</span> sum,
+         <span class="ty">field</span> <span class="kw">private</span> x,
+         <span class="ty">field</span> <span class="kw">private</span> y) -&gt; <span class="ty">field</span> {
+    <span class="kw">assert</span>(x + y == sum);
+    <span class="kw">return</span> <span class="num">1</span>;
 }</pre>
         </div>
         <div class="code-card output-card">
-            <div class="card-header"><span>🔍 Compilation Result</span><span class="lang">2 constraints</span></div>
+            <div class="card-header"><span>🔍 Pipeline Result</span><span class="lang">ark-groth16</span></div>
             <pre>
-<span class="ok">✓ Compilation successful</span>
-  Constraints:   <span class="num">2</span>
-  Curve:         bn128
-  Backend:       Groth16
+<span class="ok">=== Circuit ===</span>
+  Variables:   4   Constraints: 1
 
-<span class="ok">✓ Proof generated</span>
-  Proving key:   proving.key
-  Proof:         proof.json
+<span class="ok">=== Trusted Setup Complete ===</span>
+  Wrote pk.json, vk.json
 
-<span class="ok">✓ Verified on-chain</span>
-  Gas used:      ~250,000
-  Status:        <span class="ok">VALID</span></pre>
+<span class="ok">=== Proof Generated ===</span>
+  Curve:  bls12-381
+  Saved to proof.json
+
+<span class="ok">✓ PROOF VERIFIED</span></pre>
         </div>
     </div>
 
@@ -419,24 +405,20 @@ footer a { color: var(--accent); text-decoration: none; }
             <span class="cli-title">terminal — full pipeline</span>
         </div>
         <pre>
-<span class="prompt">$</span> astra compile -i program.zara --curve bn128
-<span class="output">Compiled code written to 'out'
-Number of constraints: 2</span>
+<span class="prompt">$</span> astra prove compile -p 8 -r 3,5 examples/sum.zara
+<span class="output">=== Circuit ===
+  Variables:   4  Constraints: 1</span>
 
-<span class="prompt">$</span> astra setup -i out
-<span class="output">Setup complete</span>
+<span class="prompt">$</span> astra prove setup -p 8 -r 3,5 examples/sum.zara
+<span class="output">=== Trusted Setup Complete ===
+  Wrote pk.json, vk.json</span>
 
-<span class="prompt">$</span> astra witness -i out --stdin &lt;&lt;&lt; '["3", "9"]'
-<span class="output">Witness computed</span>
+<span class="prompt">$</span> astra prove prove -p 8 -r 3,5 examples/sum.zara
+<span class="output">=== Proof Generated ===
+  Saved to proof.json</span>
 
-<span class="prompt">$</span> astra prove -i out -w witness -p proving.key
-<span class="output"><span class="ok">✓ Proof generated</span></span>
-
-<span class="prompt">$</span> astra verify -v verification.key -j proof.json
-<span class="output"><span class="ok">✓ PROOF VERIFIED</span></span>
-
-<span class="prompt">$</span> astra deploy verifier -i verification.key
-<span class="output">verifier.sol — ready to deploy</span></pre>
+<span class="prompt">$</span> astra prove verify -p 8 -r 3,5 examples/sum.zara
+<span class="output"><span class="ok">✓ PROOF VERIFIED</span></span></pre>
     </div>
 
     <div class="section-header" style="margin-top: 60px;">
@@ -444,72 +426,70 @@ Number of constraints: 2</span>
         <p>The compiler pipeline — from source code to verified proof.</p>
     </div>
     <div class="flow">
-        <div class="flow-step"><div class="num">1</div><div class="label">Write Code</div><div class="desc">Python-like DSL</div></div>
+        <div class="flow-step"><div class="num">1</div><div class="label">Write Code</div><div class="desc">Zara DSL</div></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">2</div><div class="label">Compile</div><div class="desc">R1CS constraints</div></div>
+        <div class="flow-step"><div class="num">2</div><div class="label">Compile</div><div class="desc">R1CS + witness</div></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">3</div><div class="label">Setup</div><div class="desc">Generate keys</div></div>
+        <div class="flow-step"><div class="num">3</div><div class="label">Setup</div><div class="desc">pk.json + vk.json</div></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">4</div><div class="label">Witness</div><div class="desc">Compute values</div></div>
+        <div class="flow-step"><div class="num">4</div><div class="label">Prove</div><div class="desc">proof.json</div></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">5</div><div class="label">Prove</div><div class="desc">Generate proof</div></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><div class="num">6</div><div class="label">Verify</div><div class="desc">Check on-chain</div></div>
+        <div class="flow-step"><div class="num">5</div><div class="label">Verify</div><div class="desc">honest check</div></div>
     </div>
 </section>
 
 <section id="features">
     <div class="section-header">
         <h2>Everything You <span>Need</span></h2>
-        <p>A complete zero-knowledge proving toolkit.</p>
+        <p>What the toolkit actually ships today.</p>
     </div>
     <div class="features-grid">
         <div class="feature-card">
             <div class="icon">📝</div>
-            <h3>High-Level DSL</h3>
-            <p>Python-like syntax with types, generics, structs, arrays, and imports. No low-level constraint wrangling.</p>
+            <h3>Zara DSL</h3>
+            <p>Imperative, typed, assert-based circuit language with span-aware diagnostics and an LSP hook.</p>
         </div>
         <div class="feature-card">
             <div class="icon">🔐</div>
-            <h3>4 Proving Schemes</h3>
-            <p>Groth16, GM17, Marlin (universal), and Nova (IVC). Pick the right scheme for your use case.</p>
+            <h3>Honest Groth16</h3>
+            <p>Real ark-groth16 proving over BLS12-381. verify() loads vk.json + proof.json and checks the bound public inputs — tampering is rejected.</p>
         </div>
         <div class="feature-card">
-            <div class="icon">⛓️</div>
-            <h3>Solidity Export</h3>
-            <p>One command to generate a verifier contract. Deploy to Ethereum for ~250k gas per verification.</p>
+            <div class="icon">🧩</div>
+            <h3>Backend Registry</h3>
+            <p>Plugin-style backends behind one trait: ark-groth16 (default) and a hand-rolled legacy reference implementation.</p>
         </div>
         <div class="feature-card">
             <div class="icon">📚</div>
             <h3>Standard Library</h3>
-            <p>Built-in SHA256, Poseidon, Keccak, MiMC7, Blake2, ECC (BabyJubJub), EdDSA, and SNARK verifiers.</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon">🔄</div>
-            <h3>7 Curves Supported</h3>
-            <p>BN128, BLS12-381, BLS12-377, BW6-761, Pallas, Vesta — covering Ethereum, Filecoin, and Mina ecosystems.</p>
+            <p>Versioned gadgets including Poseidon hashing and Merkle trees with inclusion proofs.</p>
         </div>
         <div class="feature-card">
             <div class="icon">🛡️</div>
             <h3>Security Scanner</h3>
-            <p>Built-in audit tool that detects vulnerable patterns in circuits and Solidity verifier contracts.</p>
+            <p>Static analyzers: signal-flow analysis for unconstrained public inputs plus CEI/reentrancy checks for Solidity.</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon">📤</div>
+            <h3>Verifier Publishing</h3>
+            <p>JSON test vectors from real artifacts today; EVM export that honestly refuses non-BN254 curves rather than emitting a fake contract.</p>
         </div>
         <div class="feature-card">
             <div class="icon">🌐</div>
             <h3>Web IDE + CLI</h3>
-            <p>Browser-based Monaco editor playground or terminal CLI. Same engine, any interface.</p>
+            <p>Browser-based Monaco playground backed by the same engine, or the astra CLI in your terminal.</p>
         </div>
         <div class="feature-card">
             <div class="icon">⚡</div>
             <h3>Rust Native</h3>
-            <p>Blazing fast compilation and proving powered by Rust with BLS12-381 and Groth16 backends.</p>
+            <p>Blazing fast compilation and proving powered by Rust with the arkworks cryptography stack.</p>
         </div>
     </div>
 </section>
 
 <section class="cta-section">
     <h2>Ready to Build? <span>Try It Now</span></h2>
-    <p>No installation needed — use the browser-based playground or install the CLI in seconds.</p>
+    <p>Use the browser-based playground or install the CLI and prove something in minutes.</p>
     <div class="hero-btns">
         <a href="playground.html" class="btn-primary">▶ Launch Playground</a>
         <a href="docs.html" class="btn-secondary">📖 Read the Docs</a>
@@ -521,7 +501,7 @@ Number of constraints: 2</span>
     <p style="margin-top: 8px;">
         <a href="playground.html">Playground</a> ·
         <a href="docs.html">Docs</a> ·
-        <a href="https://github.com/SURUJ404/ZARA">GitHub</a>
+        <a href="https://github.com/SURUJ404/Zarathustra">GitHub</a>
     </p>
 </footer>
 

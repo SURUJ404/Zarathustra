@@ -2,7 +2,9 @@
   "name": "zarathustra",
   "private": true,
   "scripts": {
-    "start": "node web/server.js"
+    "start": "node web/server.js",
+    "build:cli": "node npm/astra/install.js",
+    "cli": "node npm/astra/bin/astra.js"
   },
   "dependencies": {
     "express": "^4.18",

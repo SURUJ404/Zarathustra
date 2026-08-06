@@ -1,0 +1,25 @@
+{
+  "name": "@zarathustra/cli",
+  "version": "0.1.0",
+  "description": "Zarathustra zkSNARK toolkit CLI (wraps the Rust `astra` binary)",
+  "license": "Apache-2.0",
+  "bin": {
+    "astra": "./bin/astra.js"
+  },
+  "files": [
+    "bin/",
+    "install.js",
+    "README.md"
+  ],
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "optionalDependencies": {
+    "@zarathustra/cli-win32-x64": "0.1.0",
+    "@zarathustra/cli-darwin-arm64": "0.1.0",
+    "@zarathustra/cli-linux-x64": "0.1.0"
+  }
+}

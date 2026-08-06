@@ -1,0 +1,5 @@
+// Prove you know x, y such that x + y == sum
+def main(field public sum, field private x, field private y) -> field {
+    assert(x + y == sum);
+    return 1;
+}

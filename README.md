@@ -37,12 +37,70 @@ astra prove verify     -p 8    -r 3,5 examples/sum.zara   # → true
 
 ## CLI
 
+The `astra` binary is the zkSNARK toolkit. Every build target drops artifacts in
+the **current working directory** (`pk.json`, `vk.json`, `proof.json`). See
+`docs/CLI.md` for the complete reference.
+
+```console
+# top-level
+astra                          # usage summary
+astra <cmd> --help             # per-command help
+```
+
 | Command | Purpose |
 | --- | --- |
 | `astra prove compile\|setup\|prove\|verify` | Full proof pipeline on a `.zara` file |
 | `astra audit [-f json] [--deny high] [target]` | Static security scan (Zara, Rust, Solidity) |
 | `astra deploy init\|verifier\|verify` | Circuit projects + verifier export |
-| `astra publish -t evm\|starknet\|wasm\|aleo\|jt` | Verifier export targets (day-1 skeleton) |
+| `astra publish -t evm\|starknet\|wasm\|aleo\|jt` | Verifier export targets |
+
+### Proof pipeline (`astra prove`)
+
+`compile` parses a Zara source file, lowers it to R1CS, evaluates the witness,
+and prints the circuit summary. `setup` generates the CRS (`pk.json` +
+`vk.json`). `prove` generates the proof (`proof.json`). `verify` validates
+`proof.json` against the public inputs **bound into the proof** (exit code 0 /
+1).
+
+```console
+astra prove compile -p 8 -r 3,5 circuit.zara   # circuit + witness
+astra prove setup   -p 8 -r 3,5 circuit.zara   # → pk.json, vk.json
+astra prove prove   -p 8 -r 3,5 circuit.zara   # → proof.json
+astra prove verify  -p 8 -r 3,5 circuit.zara   # → ✓ PROOF VERIFIED
+```
+
+- `-p <n,n>` public inputs, `-r <n,n>` private (comma-separated).
+- `--backend ark-groth16` (default) or `legacy`.
+- `verify` refuses tampered proofs / mismatched keys with a non-zero exit.
+
+### Security audit
+
+```console
+astra audit .                       # terminal report
+astra audit --format json -o audit.json .
+astra audit --deny high .           # exit non-zero on HIGH+ findings
+```
+
+Check IDs: `CIR-001…006` (circuits), `SOL-001…006` (Solidity). Runs a
+**signal-flow analysis** that flags unconstrained public inputs (HIGH) and a
+**CEI / reentrancy** check for Solidity verifiers. See `SECURITY.md`.
+
+### Project scaffolding
+
+```console
+astra deploy init project       # creates project/src/main.zara
+astra deploy verifier           # Solidity export (errors out for now)
+astra deploy verify             # simulated on-chain verify (pending)
+```
+
+### Verifier publishing
+
+```console
+astra publish -t jt             # → zara_test_vectors.json (real proof+VK)
+astra publish -t evm            # BLS12-381 refuses; BN254 verifier pending
+```
+
+Full option list and artifacts are documented in `docs/CLI.md`.
 
 ## Workspace
 
@@ -56,19 +114,6 @@ astra prove verify     -p 8    -r 3,5 examples/sum.zara   # → true
 | `astra_publish` | Verifier export: EVM, Starknet, WASM, Aleo, JSON test vectors. |
 | `astra_security` | Static analyzers: signal flow, CEI/reentrancy, regex patterns. |
 | `astra_cli` | The `astra` binary. |
-
-## Security auditing
-
-```console
-astra audit .                       # terminal report
-astra audit --format json -o audit.json .
-astra audit --deny high .           # exit non-zero on HIGH+ findings
-```
-
-Check IDs: `CIR-001…006` (circuits), `SOL-001…006` (Solidity). Beyond
-pattern matching, `astra_security` runs a **signal-flow analysis** that
-flags unconstrained public inputs (HIGH) and a **CEI / reentrancy** check
-for Solidity verifiers. See `SECURITY.md`.
 
 ## Playground
 
