@@ -46,6 +46,7 @@ function run(input, cmd, privateVals, publicVals, reuseDir) {
     if (!fs.existsSync(bin)) {
         return { ok: false, error: 'astra binary not found' };
     }
+    try { fs.chmodSync(bin, 0o755); } catch (e) {}
     const reqDir = reuseDir || path.join(WORK_DIR, crypto.randomUUID());
     fs.mkdirSync(reqDir, { recursive: true });
     const f = path.join(reqDir, 'zara_main.zara');
