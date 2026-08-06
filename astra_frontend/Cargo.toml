@@ -14,8 +14,4 @@ bls12_381.workspace = true
 
 [features]
 default = []
-wasm = ["dep:wasm-bindgen"]
-
-[dependencies.wasm-bindgen]
-version = "0.2"
-optional = true
+wasm = []
