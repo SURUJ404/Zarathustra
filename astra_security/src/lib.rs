@@ -7,6 +7,78 @@ pub use report::{report_html, report_json, report_terminal};
 
 use std::time::Instant;
 
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct AllowList {
+    /// Findings to exempt from the scan. Each entry suppresses findings in a
+    /// specific file that match the given (optional) category/title/line.
+    #[serde(default)]
+    pub allow: Vec<AllowEntry>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AllowEntry {
+    #[serde(default)]
+    pub file: Option<String>,
+    #[serde(default)]
+    pub category: Option<String>,
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default)]
+    pub line: Option<usize>,
+}
+
+impl AllowEntry {
+    fn matches(&self, f: &Finding) -> bool {
+        if let Some(file) = &self.file {
+            let needle = file.replace('\\', "/");
+            let hay = f.file.replace('\\', "/");
+            if !hay.ends_with(needle.as_str()) {
+                return false;
+            }
+        }
+        if let Some(category) = &self.category {
+            if f.category != *category {
+                return false;
+            }
+        }
+        if let Some(title) = &self.title {
+            if f.title != *title {
+                return false;
+            }
+        }
+        if let Some(line) = self.line {
+            if f.line != Some(line) {
+                return false;
+            }
+        }
+        true
+    }
+}
+
+impl AllowList {
+    fn is_allowed(&self, f: &Finding) -> bool {
+        // An entry with no matchers at all would exempt everything — guard.
+        let specific = self.allow.iter().any(|e| {
+            e.file.is_some() || e.category.is_some() || e.title.is_some() || e.line.is_some()
+        });
+        if !specific || self.allow.is_empty() {
+            return false;
+        }
+        self.allow.iter().any(|e| e.matches(f))
+    }
+}
+
+impl AllowList {
+    pub fn from_config<S: AsRef<std::path::Path>>(path: S) -> Option<AllowList> {
+        let p = path.as_ref();
+        if !p.exists() {
+            return None;
+        }
+        let text = std::fs::read_to_string(p).ok()?;
+        serde_json::from_str(&text).ok()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Finding {
     pub severity: String,
@@ -88,6 +160,12 @@ pub fn scan_path(path: &str, verbose: bool) -> ScanResult {
                 findings = analyzers::analyze(&code, &ext, path);
             }
         }
+    }
+
+    // Apply the allow-list (if any) so sanctioned findings — e.g. deliberate
+    // `unsafe` in the WASM ABI glue — don't block deploys.
+    if let Some(allow) = AllowList::from_config(".astra-audit.json") {
+        findings.retain(|f| !allow.is_allowed(f));
     }
 
     let duration = start.elapsed().as_secs_f64() * 1000.0;

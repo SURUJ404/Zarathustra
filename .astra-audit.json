@@ -1,0 +1,10 @@
+{
+  "allow": [
+    {
+      "file": "astra_frontend/src/wasm.rs",
+      "category": "Unsafe Usage",
+      "title": "Unsafe Code Block",
+      "note": "Deliberate unsafe in the dependency-free WASM ABI: raw pointer alloc/dealloc and buffer copying are required for the #[no_mangle] extern ABI (see astra_alloc/astra_free/astra_compile)."
+    }
+  ]
+}
