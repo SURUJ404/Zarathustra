@@ -320,7 +320,7 @@ mod ground_truth_tests {
         assert!(cs.c[0].is_empty());
 
         // And the whole system is satisfied under the witness.
-        validate_constraints(&cs).unwrap();
+        validate_constraints(&cs).expect("example_a ground truth must hold");
     }
 
     #[test]
@@ -336,7 +336,7 @@ mod ground_truth_tests {
             &[sc("15")],
             &[sc("3"), sc("5")],
         )
-        .unwrap();
+        .expect("example_b must compile");
 
         // Witness: [one, c=15, a=3, b=5, t=15, ~mult_0=15], var count = 6.
         assert_eq!(cs.num_variables, 6);
@@ -355,7 +355,7 @@ mod ground_truth_tests {
         assert!(cs.c[1].is_empty());
 
         assert_eq!(cs.witness[5], sc("15"));
-        validate_constraints(&cs).unwrap();
+        validate_constraints(&cs).expect("example_b ground truth must hold");
     }
 
     #[test]
@@ -369,13 +369,13 @@ mod ground_truth_tests {
             &[sc("12")],
             &[sc("3"), sc("4")],
         )
-        .unwrap();
+        .expect("mul intermediate must compile");
 
         // one + 3 params + 1 ~mult = 5 vars; 1 mul row + 1 assert row = 2.
         assert_eq!(cs.num_variables, 5);
         assert_eq!(cs.num_constraints, 2);
         assert_eq!(cs.witness[4], sc("12")); // ~mult_0 = 3*4
-        validate_constraints(&cs).unwrap();
+        validate_constraints(&cs).expect("mul intermediate ground truth must hold");
     }
 }
 
