@@ -266,6 +266,119 @@ impl Compiler {
     }
 }
 
+/// Oracle assertions pinning the editor of [[crate::compiler::compile]] to the
+/// mathematical ground truth in `docs/CONSTRAINT_MODEL.md`. These are the
+/// exact invariants fuzzing and code review rely on: deterministic index
+/// layout, per-construct constraint counts, and row shapes.
+#[cfg(test)]
+mod ground_truth_tests {
+    use super::*;
+
+    /// helper: decimal-string input → Scalar (avoids scalar-in-0 issues).
+    fn sc(s: &str) -> Scalar {
+        astra_ir::types::scalar_from_dec_str(s).expect("valid scalar")
+    }
+
+    /// `==` on a `(usize, Scalar)` pair, in any term order.
+    fn has_term(row: &[(usize, Scalar)], idx: usize, coeff: &str) -> bool {
+        row.iter().any(|(i, c)| *i == idx && *c == sc(coeff))
+    }
+
+    #[test]
+    fn example_a_add_chain_layout() {
+        // def main(field public c, field private a, field private b) {
+        //     field t = a + b; assert(t == c); return 1; }
+        let cs = compile(
+            "def main(field public c, field private a, field private b) -> field {\n\
+             field t = a + b;\n\
+             assert(t == c);\n\
+             return 1;\n\
+             }",
+            &[sc("7")],
+            &[sc("3"), sc("4")],
+        )
+        .expect("compiles");
+
+        // Ground truth: num_public=2 (~one+c), num_private=3 (a,b,t),
+        // num_variables=5, num_constraints=1 (only the assert; + is linear).
+        assert_eq!(cs.num_public, 2);
+        assert_eq!(cs.num_private, 3);
+        assert_eq!(cs.num_variables, 5);
+        assert_eq!(cs.num_constraints, 1);
+
+        // witness: [~one=1, c=7, a=3, b=4, t=7]
+        assert_eq!(cs.witness[0], sc("1"));
+        assert_eq!(cs.witness[1], sc("7"));
+        assert_eq!(cs.witness[2], sc("3"));
+        assert_eq!(cs.witness[3], sc("4"));
+        assert_eq!(cs.witness[4], sc("7"));
+
+        // The single row: 1 * (t - c) = 0  →  A=[(0,1)], B=[(4,1),(1,-1)], C=[]
+        assert!(has_term(&cs.a[0], 0, "1"));
+        assert!(has_term(&cs.b[0], 4, "1"));
+        assert!(has_term(&cs.b[0], 1, "-1"));
+        assert!(cs.c[0].is_empty());
+
+        // And the whole system is satisfied under the witness.
+        validate_constraints(&cs).unwrap();
+    }
+
+    #[test]
+    fn example_b_mul_gate_layout() {
+        // def main(field public c, field private a, field private b) {
+        //     field t = a * b; assert(t == c); return 1; }
+        let cs = compile(
+            "def main(field public c, field private a, field private b) {\n\
+             field t = a * b;\n\
+             assert(t == c);\n\
+             return 1;\n\
+             }",
+            &[sc("15")],
+            &[sc("3"), sc("5")],
+        )
+        .unwrap();
+
+        // Witness: [one, c=15, a=3, b=5, t=15, ~mult_0=15], var count = 6.
+        assert_eq!(cs.num_variables, 6);
+        assert_eq!(cs.num_private, 4); // a, b, t, ~mult_0
+        assert_eq!(cs.num_constraints, 2);
+
+        // row 0: a·b = ~mult_0  -> A=[(2,1)] B=[(3,1)] C=[(5,1)]
+        assert!(has_term(&cs.a[0], 2, "1"));
+        assert!(has_term(&cs.b[0], 3, "1"));
+        assert!(has_term(&cs.c[0], 5, "1"));
+
+        // row 1: t − c = 0
+        assert!(has_term(&cs.a[1], 0, "1"));
+        assert!(has_term(&cs.b[1], 4, "1"));
+        assert!(has_term(&cs.b[1], 1, "-1"));
+        assert!(cs.c[1].is_empty());
+
+        assert_eq!(cs.witness[5], sc("15"));
+        validate_constraints(&cs).unwrap();
+    }
+
+    #[test]
+    fn mul_intermediate_is_fresh_private_var() {
+        // Nested: c = (a*b) with no explicit declare → ~mult_0 then result.
+        let cs = compile(
+            "def main(field public c, field private a, field private b) {\n\
+             assert((a * b) == c);\n\
+             return 1;\n\
+             }",
+            &[sc("12")],
+            &[sc("3"), sc("4")],
+        )
+        .unwrap();
+
+        // one + 3 params + 1 ~mult = 5 vars; 1 mul row + 1 assert row = 2.
+        assert_eq!(cs.num_variables, 5);
+        assert_eq!(cs.num_constraints, 2);
+        assert_eq!(cs.witness[4], sc("12")); // ~mult_0 = 3*4
+        validate_constraints(&cs).unwrap();
+    }
+}
+
 #[derive(Clone, Debug)]
 struct LinearCombination {
     terms: Vec<(usize, Scalar)>,
